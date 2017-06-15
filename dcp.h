@@ -29,9 +29,19 @@ struct option{
 } OPT;
 
 typedef struct ip_param{
-	u_char IP [4];
-	u_char Subnet[4];
-	u_char Gateway[4];
+	//vollkommen idiotisch, dass als int zu speichern, aber mit u_char geht's nicht, obwohl es theoretisch ja genauso gehen müsste wie bei d vendor_id und MAC
+	int ip [4];
+	int subnet[4];
+	int gateway[4];
+	
+	ip_param(){
+	for (int i = 0 ; i<4 ; i++){
+		ip[i]=0;
+		subnet[i]=0;
+		gateway[i]=0;
+	}
+	std::cout << "test f ip konstruktor:ip[0]:" << ip[0] <<std::endl;
+	}
 }IPPAR;
 
 typedef struct device {
@@ -52,11 +62,6 @@ typedef struct device {
 	for (int i = 0; i<2; ++i){
 		vendor_id[i]='\0';
 		device_id[i]='\0';
-	}
-	for (int i = 0 ; i<4 ; i++){
-		ipParam.IP[i]=0x00;
-		ipParam.Subnet[i]=0x00;
-		ipParam.Gateway[i]=0x00;
 	}
 	devRole=static_cast<device_role>(0xF0);
 	}
@@ -225,6 +230,11 @@ std::ostream& operator << (std::ostream& os, const device& dev){
 					<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.device_id[1])<<std::endl
 			<<"device_role: "<<dev.devRole <<std::endl
 			<<"supported options: " << dev.options;
+	if (!(dev.ipParam.ip[0]==0 && dev.ipParam.ip[1]==0 && dev.ipParam.ip[2]==0 && dev.ipParam.ip[3]==0)){
+		os << "ip: " << dev.ipParam.ip[0] <<"."<< dev.ipParam.ip[1] <<"."<<  dev.ipParam.ip[2] <<"."<<  dev.ipParam.ip[3]<< std:: endl
+			<<"Subnet: " << dev.ipParam.subnet[0] <<"."<< dev.ipParam.subnet[1] <<"."<<  dev.ipParam.subnet[2] <<"."<<  dev.ipParam.subnet[3]<< std:: endl
+			<<"Gateway: " << dev.ipParam.gateway[0] <<"."<< dev.ipParam.gateway[1] <<"."<<  dev.ipParam.gateway[2] <<"."<<  dev.ipParam.gateway[3]<< std:: endl;			
+	}
 	return os; 
 }
 
