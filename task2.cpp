@@ -66,7 +66,7 @@ void recieveResponse();
 
 int main(int argc, char *argv[]) {
 
-	//read default_if from terminal
+	//read if from terminal
 	if (argc > 1)
 		strcpy(ifName, argv[1]);
 	else
@@ -151,7 +151,10 @@ int main(int argc, char *argv[]) {
 			//always equal in Get-Request
 			struct dcpHeader dcpHeader_getReq(serviceID_getReq, serviceType_Req, xID, respDelayFactor_withoutImpact, dataLength_getReq);
 			struct dcpDataHeader dcpDataHeader_getReq(option, subOption, length, status);
-			sendDCPFrame(mac, etherType_profiNET, frameID_getReq, dcpHeader_getReq, dcpDataHeader_getReq, 0x00);		
+			sendDCPFrame(mac, etherType_profiNET, frameID_getReq, dcpHeader_getReq, dcpDataHeader_getReq, 0x00);	
+			
+			//erneute Ausgabe des devices (falls bspw IP abgefragt)
+			std::cout << device_list[device-1] << std::endl;	
 		
 		} else if(decision == 4) {
 			std::cout << "-----> Set-Request:\n" << std::endl;
@@ -412,9 +415,9 @@ struct device* parseResp(unsigned char* buffer, device*d){
 					break;
 				case 2: //IP-Parameter
 					for (int i =0; i<4; i++){
-						d->ipParam.IP[i]=buffer[temp +6];
-						d->ipParam.Subnet[i]=buffer[temp + 10];
-						d->ipParam.Gateway[i]=buffer[temp +14];
+						d->ipParam.ip[i]=static_cast<int>(buffer[temp+ i +6]);
+						d->ipParam.subnet[i]=static_cast<int>(buffer[temp + i + 10]);
+						d->ipParam.gateway[i]=static_cast<int>(buffer[temp + i +14]);
 					}
 				default: break;
 			} break;
