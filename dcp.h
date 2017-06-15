@@ -40,7 +40,6 @@ typedef struct ip_param{
 		subnet[i]=0;
 		gateway[i]=0;
 	}
-	std::cout << "test f ip konstruktor:ip[0]:" << ip[0] <<std::endl;
 	}
 }IPPAR;
 
