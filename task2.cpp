@@ -16,12 +16,13 @@
 #include <unistd.h>
 #include "dcp.h"
 
-#define DEFAULT_IF	"enx9cebe808bd01"
 #define BUF_SIZ		1024
+#define DEFAULT_IF	"enx9cebe808bd01"
 
 //socket
 int sockfd; //socket for sending
 int sockrec;//socket for recieving
+char ifName[IFNAMSIZ];
 
 std::vector <struct device*> device_list; //List of devices, known from Ident-Request
 
@@ -64,6 +65,13 @@ void sendDCPFrame(unsigned char destMAC[], unsigned char etherType[], unsigned c
 void recieveResponse();
 
 int main(int argc, char *argv[]) {
+
+	//read default_if from terminal
+	if (argc > 1)
+		strcpy(ifName, argv[1]);
+	else
+		strcpy(ifName, DEFAULT_IF);
+
 
 	std::cout << "----------ProfiNET-Tool----------\n" << std::endl;
 
@@ -262,9 +270,7 @@ void sendDCPFrame(unsigned char mac[], unsigned char etherType[], unsigned char 
 	//struct iphdr *iph = (struct iphdr *) (sendbuf + sizeof(struct ether_header));
 	
 	struct sockaddr_ll socket_address;
-	char ifName[IFNAMSIZ];
 	
-	strcpy(ifName, DEFAULT_IF);
 
 	/* Get the index of the interface to send on */
 	memset(&if_idx, 0, sizeof(struct ifreq));
