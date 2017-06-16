@@ -14,15 +14,21 @@
 #include <vector>
 #include <thread>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <iostream>
 #include "dcp.h"
 
 #define BUF_SIZ		1024
 #define DEFAULT_IF	"enx9cebe808bd01"
+#define LOCAL_PORT 8894
+#define REMOTE_PORT 8894
 
 
 //socket
-int sockfd; //socket for sending
+int sockfd; //socket for sending DCP-Frames
 int sockrec;//socket for recieving
+int sockUDP;//socket for sending UDP-Frames
 char ifName[IFNAMSIZ];
 
 std::vector <struct device*> device_list; //List of devices, known from Ident-Request
@@ -61,9 +67,10 @@ unsigned char length[2] = {0x00, 0x00};
 unsigned char lengthIP[2] = {0x00, 0x0E};
 
 //Declaration of Functions
-void createRAWEthernetSocket();
+void createSockets();
 void sendDCPFrame(unsigned char destMAC[], unsigned char etherType[], unsigned char frameID[], struct dcpHeader, struct dcpDataHeader, unsigned char data[]);
 void recieveResponse();
+void sendUDPFrame(unsigned char destIP[], unsigned char data[], int dataSize);
 
 int main(int argc, char *argv[]) {
 
@@ -73,10 +80,9 @@ int main(int argc, char *argv[]) {
 	else
 		strcpy(ifName, DEFAULT_IF);
 
-
 	std::cout << "----------ProfiNET-Tool----------\n" << std::endl;
 
-	createRAWEthernetSocket();
+	createSockets();
 
 	std::thread first (recieveResponse);
 
@@ -99,14 +105,16 @@ int main(int argc, char *argv[]) {
 	int decision;
 
 	while(1) {
-		
+		decision = 0;
 		usleep(1000000);
 
 		std::cout << "What you want to do next?" << std::endl;
 		std::cout << "1. Hello-Request? - Press 1" << std::endl;
 		std::cout << "2. Ident-Request? - Press 2" << std::endl;
 		std::cout << "3. Get-Request?   - Press 3" << std::endl;
-		std::cout << "4. Set-Request?   - Press 4\n" << std::endl;
+		std::cout << "4. Set-Request?   - Press 4" << std::endl;
+		std::cout << "5. RPC - Read     - Press 5" << std::endl;
+		std::cout << "6. RPC - Write    - Press 6\n" << std::endl;
 
 		scanf("%d", &decision);
 
@@ -245,20 +253,70 @@ int main(int argc, char *argv[]) {
 				std::cout << "option not valid!" << std::endl;
 			}
 
+		} else if(decision == 5) {
+			std::cout << "-----> RPC-Read:\n" << std::endl;
+			
+			int device;
+
+			std::cout << "choose a device: (from which device you want to read?)\n" << std::endl;
+			for(int tmp = 0; tmp < device_list.size(); tmp++) {
+				struct device dev = *device_list[tmp];
+				std::cout << tmp+1 << ". " << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[0])<<":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[1]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[2]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[3])
+												<< " <- (" << dev.name << ")" << std::endl;
+			}
+			std::cout << "" << std::endl; //new Line
+
+			scanf("%d", &device);
+			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
+
+			unsigned char data[4] = {0x42, 0x42, 0x42, 0x42,};
+
+			sendUDPFrame(ip, data, sizeof(data));
+
+		} else if(decision == 6) {
+			std::cout << "-----> RPC-Write:\n" << std::endl;
+			std::cout << "TODO ;)\n" << std::endl;
 
 		} else {
-			std::cout << "decition not valid!" << std::endl;
+			std::cout << "decision not valid!" << std::endl;
 		}
 	}
 	return 0;
 }
 
-void createRAWEthernetSocket() {
+void createSockets() {
+	//for sending DCP-Frames
 	if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
-		std::cout << "CreateSocketError" << std::endl;
+		perror("cannot create socket for sending DCP-Frames\n");
 	}
+
+	//for recieving DCP-Frames
 	if ((sockrec = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) == -1) {
-	    perror("socket\n");
+		perror("cannot create socket for recieveing DCP-Frames\n");
+	}
+
+	//for sending UDP-Frames
+	/*struct used for binding the socket to a local address*/
+	struct sockaddr_in host_address;	
+	
+	if((sockUDP = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+		perror("cannot create socket for sending UDP-Frames\n");
+	}
+	/*init the host_address the socket is beeing bound to*/
+	memset((void*)&host_address, 0, sizeof(host_address));
+	/*set address family*/
+	host_address.sin_family=PF_INET;
+	/*accept any incoming messages:*/
+	host_address.sin_addr.s_addr=INADDR_ANY;
+	/*the port the socket i to be bound to:*/
+	host_address.sin_port=htons(LOCAL_PORT);
+	
+	/*bind it...*/
+	if (bind(sockUDP, (struct sockaddr*)&host_address, sizeof(host_address)) < 0) {
+		perror("cannot bind socket for sending UDP-Frames\n");
 	}
 }
 
@@ -369,6 +427,35 @@ void sendDCPFrame(unsigned char mac[], unsigned char etherType[], unsigned char 
 	if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0) {
 		std::cout << "send failed!" << std::endl;
 	}
+}
+
+void sendUDPFrame(unsigned char destIP[], unsigned char data[], int dataSize) {
+	char buffer[BUF_SIZ]; 					/*the message to send*/
+	struct sockaddr_in target_host_address;	/*the receiver's address*/
+	unsigned char* target_address_holder;	/*a pointer to the ip address*/
+
+	/*init target address structure*/
+	target_host_address.sin_family=PF_INET;
+	target_host_address.sin_port=htons(REMOTE_PORT);
+	target_address_holder=(unsigned char*)&target_host_address.sin_addr.s_addr;
+	target_address_holder[0] = destIP[0];
+	target_address_holder[1] = destIP[1];
+	target_address_holder[2] = destIP[2];
+	target_address_holder[3] = destIP[3];
+
+	/*fill message with data....*/
+	for (int j = 0; j < dataSize; j++) {
+		buffer[j] = data[j];
+	}
+	
+	std::cout<<"packet data"<< std::endl;
+	for (int j = 0; j < dataSize; j++) {
+		std::cout << std::hex << buffer[j]<<" ";
+	}
+	std::cout << std::endl; //new Line
+
+	/*send it*/
+	std::cout<< "sendto returns " << sendto(sockUDP, buffer, dataSize, 0, (struct sockaddr*)&target_host_address, sizeof(struct sockaddr)) <<std::endl;
 }
 
 struct device* parseResp(unsigned char* buffer, device*d){
