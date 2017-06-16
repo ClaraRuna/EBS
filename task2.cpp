@@ -506,7 +506,8 @@ void recieveResponse() {
 		if (length == -1) {
 			printf("errorhandling ....\n");
 		}	
-		if (buffer[12]==0x88 && buffer [13]==0x92) { //dcp-paket
+		if (buffer[12]==0x88 && buffer [13]==0x92 //dcp-paket
+			&& buffer[18]==xID[0] && buffer[19]==xID[1] && buffer[20]==xID[2] && buffer[21]==xID[3]) { //mit korrekter xid
 
 			struct device * d = NULL;
 			//check if device already exists
