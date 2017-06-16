@@ -425,12 +425,14 @@ struct device* parseResp(unsigned char* buffer, device*d){
 			//DeviceProp
 			case 2: switch (dcp_dh.subopt){
 				case 1: //Hersteller
+					d->vendor="";
 					for (int i = temp+6; i<temp+4+dcp_dh.length; i++){
 						d->vendor+= static_cast<char> (buffer [i]);
 					}
 					break;
 				case 2: //Stationsname
 						//temp+4header+2blockinfo
+					d->name="";
 					for (int i = temp+6; i<temp+4+dcp_dh.length; i++){
 						d->name+= static_cast<char> (buffer [i]);
 					}
@@ -447,6 +449,7 @@ struct device* parseResp(unsigned char* buffer, device*d){
 				case 5: //Optionen
 					//std::cout << "temp= " <<temp << std::endl;
 					//std::cout << "dev " << d->name <<" bietet folgende optionen:" << std::endl;
+					d->options.clear();
 					for (int i= temp+6; i< temp+4+dcp_dh.length-1; i++){
 						struct option * o;
 						o=new option;
