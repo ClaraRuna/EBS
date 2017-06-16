@@ -17,7 +17,8 @@
 #include "dcp.h"
 
 #define BUF_SIZ		1024
-#define DEFAULT_IF	"enx9cebe808bd01"
+#define DEFAULT_IF	"enx9cebe808bd01"
+
 
 //socket
 int sockfd; //socket for sending
@@ -154,7 +155,7 @@ int main(int argc, char *argv[]) {
 			sendDCPFrame(mac, etherType_profiNET, frameID_getReq, dcpHeader_getReq, dcpDataHeader_getReq, 0x00);	
 			
 			//erneute Ausgabe des devices (falls bspw IP abgefragt)
-			std::cout << device_list[device-1] << std::endl;	
+			std::cout << "updated device info: " << std::endl << *device_list[device-1] << std::endl;	
 		
 		} else if(decision == 4) {
 			std::cout << "-----> Set-Request:\n" << std::endl;

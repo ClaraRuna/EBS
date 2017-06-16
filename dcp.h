@@ -30,9 +30,9 @@ struct option{
 
 typedef struct ip_param{
 	//vollkommen idiotisch, dass als int zu speichern, aber mit u_char geht's nicht, obwohl es theoretisch ja genauso gehen müsste wie bei d vendor_id und MAC
-	int ip [4];
-	int subnet[4];
-	int gateway[4];
+	u_char ip [4];
+	u_char subnet[4];
+	u_char gateway[4];
 	
 	ip_param(){
 	for (int i = 0 ; i<4 ; i++){
@@ -230,9 +230,9 @@ std::ostream& operator << (std::ostream& os, const device& dev){
 			<<"device_role: "<<dev.devRole <<std::endl
 			<<"supported options: " << dev.options;
 	if (!(dev.ipParam.ip[0]==0 && dev.ipParam.ip[1]==0 && dev.ipParam.ip[2]==0 && dev.ipParam.ip[3]==0)){
-		os << "ip: " << dev.ipParam.ip[0] <<"."<< dev.ipParam.ip[1] <<"."<<  dev.ipParam.ip[2] <<"."<<  dev.ipParam.ip[3]<< std:: endl
-			<<"Subnet: " << dev.ipParam.subnet[0] <<"."<< dev.ipParam.subnet[1] <<"."<<  dev.ipParam.subnet[2] <<"."<<  dev.ipParam.subnet[3]<< std:: endl
-			<<"Gateway: " << dev.ipParam.gateway[0] <<"."<< dev.ipParam.gateway[1] <<"."<<  dev.ipParam.gateway[2] <<"."<<  dev.ipParam.gateway[3]<< std:: endl;			
+		os << "ip: " << static_cast <unsigned>( dev.ipParam.ip[0] )<<"."<< static_cast <unsigned>(dev.ipParam.ip[1]) <<"."<< static_cast <unsigned>( dev.ipParam.ip[2]) <<"."<<  static_cast <unsigned>(dev.ipParam.ip[3])<< std:: endl
+			<<"Subnet: " << static_cast <unsigned>(dev.ipParam.subnet[0]) <<"."<< static_cast <unsigned>(dev.ipParam.subnet[1]) <<"."<<  static_cast <unsigned>(dev.ipParam.subnet[2]) <<"."<<  static_cast <unsigned>(dev.ipParam.subnet[3])<< std:: endl
+			<<"Gateway: " << static_cast <unsigned>(dev.ipParam.gateway[0]) <<"."<< static_cast <unsigned>(dev.ipParam.gateway[1]) <<"."<<static_cast <unsigned>(  dev.ipParam.gateway[2]) <<"."<<  static_cast <unsigned>(dev.ipParam.gateway[3])<< std:: endl;			
 	}
 	return os; 
 }
