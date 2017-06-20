@@ -22,11 +22,6 @@ typedef struct{
 	int subopt = 0;
 }option;
 
-/*struct option{
-	int opt;
-	int subopt;
-}OPT;*/
-
 typedef struct ip_param{
 	u_char ip [4];
 	u_char subnet[4];
