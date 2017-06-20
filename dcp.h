@@ -17,10 +17,15 @@ enum device_role{
 
 std::ostream& operator << (std::ostream& os, const device_role& role);
 
-struct option{
+typedef struct{
+	int opt = 0;
+	int subopt = 0;
+}option;
+
+/*struct option{
 	int opt;
 	int subopt;
-} OPT;
+}OPT;*/
 
 typedef struct ip_param{
 	u_char ip [4];

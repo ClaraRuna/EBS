@@ -451,7 +451,7 @@ struct device* parseResp(unsigned char* buffer, device*d){
 					//std::cout << "dev " << d->name <<" bietet folgende optionen:" << std::endl;
 					d->options.clear();
 					for (int i= temp+6; i< temp+4+dcp_dh.length-1; i++){
-						struct option * o;
+						option * o;
 						o=new option;
 						o->opt=buffer[i];
 						o-> subopt= buffer[i+1];
