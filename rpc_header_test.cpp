@@ -1,4 +1,5 @@
-#include "rpc.h"
+#include "struct.h"
+#include <iostream>
 #define RPC_HEADER_LENGTH 80
 #define UUID_LENGHT 16
 
