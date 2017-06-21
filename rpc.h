@@ -57,6 +57,7 @@ typedef struct rpc_Header{
 	void construct();	//setzt-standard werte f variablen
 		
 	unsigned char *  toBuffer();		//gibt rpc_Header in Buffer
+	long get_headerCount();
 	
 }RPCHEADER;
 

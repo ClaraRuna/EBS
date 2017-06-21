@@ -7,6 +7,8 @@
 //initialize static variable with 0;
 long rpc_Header::headerCount=0; 
 
+
+
 //default: activity, beliebig, dient nur identifikation
 uu_id::uu_id():
 		field1{0x42, 0x42,0x42,0x42},
@@ -59,6 +61,21 @@ uu_id::uu_id(device_role * role):
 	//parameterserver?? device_role kann auch multidevice sein (0x04) -> was dann??
 }
 
+unsigned char * uu_id::toBuffer(){
+	unsigned char * buffer= (unsigned char*)malloc(16);
+	
+	for (int i=0; i < 4; i++){
+		buffer[i]=field1[i];
+	}
+	for (int i=0; i<2;i++){
+		buffer[i+4]=field2[i];
+		buffer[i+6]=field3[i];
+	}
+	for (int i=0; i<8; i++){
+		buffer[i+8]=field4[i];
+	}
+}	
+
 unsigned char *  rpc_Header::toBuffer(){
 	unsigned char* buffer = (unsigned char*)malloc(80);
 	
@@ -71,6 +88,7 @@ unsigned char *  rpc_Header::toBuffer(){
 	buffer[6]=dRep[2];
 	buffer[7]=serialHigh;
 	//8 bis 23 : objectUUID: memcpy??
+	memcpy(&buffer[8], objectUUID, 16*sizeof(u_char));
 	//TODO
 	//24 bis 39 : interfaceUUID
 	//TODO
@@ -114,7 +132,7 @@ void rpc_Header::construct(){
 		
 		memcpy(&sequenceNumber, &headerCount, 4*sizeof(u_char));
 		headerCount++;
-		
+				
 		interfaceHint[0] = 0xFF;
 		interfaceHint[1] = 0xFF;
 		activityHint[0] = 0xFF;

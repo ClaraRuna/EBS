@@ -1,23 +1,21 @@
 #include "rpc.h"
 #define RPC_HEADER_LENGTH 80
+#define UUID_LENGHT 16
 
 
 
 int main(){
-	rpc_Header * rpcHeader=new rpc_Header;
-	unsigned char* buffer = rpcHeader->toBuffer();
+	uu_id * test = new uu_id;
+	unsigned char* buffer = test->toBuffer();
 	
-	for (int i = 0; i< RPC_HEADER_LENGTH; i++){
-		std::cout <<static_cast<int> (buffer[i])<<" ";
-		if (i%10==0) std::cout<<"               ";
-		if (i%20==0) std::cout<<std::endl;
+	for (int i=0; i<UUID_LENGHT; i++){
+		std::cout<< static_cast<int>(buffer[i])<< " ";
+		if (i%10==0) std::cout << "            ";
 	}
 	
-	rpc_Header * rpcHeader1=new rpc_Header;
-	rpc_Header * rpcHeader2=new rpc_Header;
-	rpc_Header * rpcHeader3=new rpc_Header;
 	
-	buffer = rpcHeader->toBuffer();
+	rpc_Header * rpcHeader=new rpc_Header(test, test, test);
+
 	
 	for (int i = 0; i< RPC_HEADER_LENGTH; i++){
 		std::cout <<static_cast<int> (buffer[i])<<" ";
