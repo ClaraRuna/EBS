@@ -1,22 +1,22 @@
-#include<string.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
+#include "header.h"
+
+#include <netinet/in.h>
 #include <iostream>
-#define BUF_SIZE 1000
-#define LOCAL_PORT 8894
+#include <string.h>
+
+#define BUF_SIZ		1024
+#define LOCAL_PORT	8894
 #define REMOTE_PORT 8894
 
-/*socketdescriptor*/
-int s;
-						
-int create_udp_socket(int port) {				
+int sockUDP;
+
+void createUDPsocket() {
 	/*struct used for binding the socket to a local address*/
 	struct sockaddr_in host_address;	
 	
-	/*create the socket*/
-	s=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (s < 0) { /*errorhandling ....*/}
-	
+	if((sockUDP = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+		perror("cannot create socket for sending UDP-Frames\n");
+	}
 	/*init the host_address the socket is beeing bound to*/
 	memset((void*)&host_address, 0, sizeof(host_address));
 	/*set address family*/
@@ -24,47 +24,39 @@ int create_udp_socket(int port) {
 	/*accept any incoming messages:*/
 	host_address.sin_addr.s_addr=INADDR_ANY;
 	/*the port the socket i to be bound to:*/
-	host_address.sin_port=htons(port);
+	host_address.sin_port=htons(LOCAL_PORT);
 	
 	/*bind it...*/
-	if (
-	   bind(s, (struct sockaddr*)&host_address, sizeof(host_address)) < 0
-	   ) {
-		std::cout<<"errorhandling..."<<std::endl;
+	if (bind(sockUDP, (struct sockaddr*)&host_address, sizeof(host_address)) < 0) {
+		perror("cannot bind socket for sending UDP-Frames\n");
 	}
-	return s;
 }
 
-int main(){
-	char buffer[BUF_SIZE]; 			/*the message to send*/
+void sendUDPFrame(unsigned char destIP[], unsigned char data[], int dataSize) {
+	char buffer[BUF_SIZ]; 					/*the message to send*/
 	struct sockaddr_in target_host_address;	/*the receiver's address*/
 	unsigned char* target_address_holder;	/*a pointer to the ip address*/
-
-	s = create_udp_socket(LOCAL_PORT);
-	if (s == -1) {std::cout << "errorhandling....." <<std::endl;}
 
 	/*init target address structure*/
 	target_host_address.sin_family=PF_INET;
 	target_host_address.sin_port=htons(REMOTE_PORT);
 	target_address_holder=(unsigned char*)&target_host_address.sin_addr.s_addr;
-	target_address_holder[0]=0xAC;
-	target_address_holder[1]=0x10;
-	target_address_holder[2]=0x01;
-	target_address_holder[3]=0xD5;
+	target_address_holder[0] = destIP[0];
+	target_address_holder[1] = destIP[1];
+	target_address_holder[2] = destIP[2];
+	target_address_holder[3] = destIP[3];
 
-	/*fill message with random data....*/
-	for (int j = 0; j < BUF_SIZE; j++) {
-		buffer[j] = 0x42;
+	/*fill message with data....*/
+	for (int j = 0; j < dataSize; j++) {
+		buffer[j] = data[j];
 	}
 	
 	std::cout<<"packet data"<< std::endl;
-	for (int j = 0; j < BUF_SIZE; j++) {
-		std::cout<<buffer[j]<<" ";
+	for (int j = 0; j < dataSize; j++) {
+		std::cout << std::hex << buffer[j]<<" ";
 	}
-	std::cout << std::endl;
+	std::cout << std::endl; //new Line
 
 	/*send it*/
-	std::cout<< "sendto returns " << sendto(s, buffer, BUF_SIZE, 0, (struct sockaddr*)&target_host_address, sizeof(struct sockaddr)) <<std::endl;
-
-
+	std::cout<< "sendto returns " << sendto(sockUDP, buffer, dataSize, 0, (struct sockaddr*)&target_host_address, sizeof(struct sockaddr)) <<std::endl;
 }
