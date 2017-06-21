@@ -66,14 +66,20 @@ unsigned char * uu_id::toBuffer(){
 	
 	for (int i=0; i < 4; i++){
 		buffer[i]=field1[i];
+	//	std::cout << buffer[i] << " " ;
 	}
 	for (int i=0; i<2;i++){
 		buffer[i+4]=field2[i];
 		buffer[i+6]=field3[i];
 	}
+	
+	//std::cout<<"//";
 	for (int i=0; i<8; i++){
 		buffer[i+8]=field4[i];
+	//	std::cout << buffer[i] <<" ";
 	}
+	
+	return buffer;
 }	
 
 unsigned char *  rpc_Header::toBuffer(){
@@ -89,15 +95,12 @@ unsigned char *  rpc_Header::toBuffer(){
 	buffer[7]=serialHigh;
 	//8 bis 23 : objectUUID: memcpy??
 	memcpy(&buffer[8], objectUUID, 16*sizeof(u_char));
-	//TODO
 	//24 bis 39 : interfaceUUID
-	//TODO
+	memcpy(&buffer[24], interfaceUUID, 16*sizeof(u_char));
 	//40 bis 55: activityUUID
-	//TODO
+	memcpy(&buffer[40], activityUUID, 16*sizeof(u_char));
 	//vorerst nur 0en:
-	for (int i = 8; i<55; i++){
-		buffer[i]=0x44;
-	}
+	
 	//56-59 serverBootTime, 60-63 interfaceVersion, 64-67 sequenceNumber
 	for (int i=0; i<4; i++){
 		buffer[56+i]=serverBootTime[i];
