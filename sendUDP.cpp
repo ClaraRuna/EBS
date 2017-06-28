@@ -58,5 +58,5 @@ void sendUDPFrame(unsigned char destIP[], unsigned char data[], int dataSize) {
 	std::cout << std::endl; //new Line
 
 	/*send it*/
-	std::cout<< "sendto returns " << sendto(sockUDP, buffer, dataSize, 0, (struct sockaddr*)&target_host_address, sizeof(struct sockaddr)) <<std::endl;
+	sendto(sockUDP, buffer, dataSize, 0, (struct sockaddr*)&target_host_address, sizeof(struct sockaddr));
 }

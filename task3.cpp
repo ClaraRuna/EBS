@@ -16,6 +16,8 @@
 #include "header.h"
 #include "outstream.h"
 
+#define RPC_HEADER_LENGTH 80
+
 std::vector <struct device*> device_list; //List of devices, known from Ident-Request
 
 unsigned char multicast_mac[6] = {0x01, 0x0E, 0xCF, 0x00, 0x00, 0x00};
@@ -258,6 +260,7 @@ int main(int argc, char *argv[]) {
 			scanf("%d", &device);
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 
+<<<<<<< HEAD
 			uu_id * testUUID = new uu_id;
 			
 			
@@ -277,6 +280,21 @@ int main(int argc, char *argv[]) {
 			
 			
 			sendUDPFrame(ip, data, sizeof(data));
+=======
+			
+			//hardcodet ObjectUUID
+			uu_id * oUUID= new uu_id(device_list[device-1]) ;
+			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole));
+			uu_id * aUUID= new uu_id();
+			
+			
+			rpc_Header * testHeader=new rpc_Header(oUUID, iUUID,  aUUID);
+			
+			unsigned char * data = testHeader->toBuffer();
+			std::cout<<"sizeof(data)"<<sizeof(*data)<<std::endl;
+			
+			sendUDPFrame(ip, data, RPC_HEADER_LENGTH);
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 
 		} else if(decision == 6) {
 			std::cout << "-----> RPC-Write:\n" << std::endl;
