@@ -156,7 +156,7 @@ void rpc_Header::construct(){
 		fragmentNumber[0]=0x00; //default: keine Fragmentierung
 		fragmentNumber[1]=0x00;
 
-		authenticationProtocoll = 0x00; //0 = keine Authentifikation
+		authentificationProtocoll = 0x00; //0 = keine Authentifikation
 		serialLow = 0x00; //das niederwertige Byte der Fragmentnummer des Aufrufs
 	}
 
