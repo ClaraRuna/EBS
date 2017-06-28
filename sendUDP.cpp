@@ -5,8 +5,8 @@
 #include <string.h>
 
 #define BUF_SIZ		1024
-#define LOCAL_PORT	8894
-#define REMOTE_PORT 8894
+#define LOCAL_PORT	0x8894
+#define REMOTE_PORT 0x8894
 
 int sockUDP;
 

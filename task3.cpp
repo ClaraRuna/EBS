@@ -258,8 +258,24 @@ int main(int argc, char *argv[]) {
 			scanf("%d", &device);
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 
-			unsigned char data[4] = {0x42, 0x42, 0x42, 0x42,};
-
+			uu_id * testUUID = new uu_id;
+			
+			
+			unsigned char* buffer = testUUID->toBuffer();
+			
+			std::cout << "testUUID buffer: \n";
+			
+			for (int i=0; i<16; i++){
+				std::cout<< static_cast<int>(buffer[i])<< " ";
+				if (i%10==0) std::cout << "            ";
+			}
+	
+			
+			//unsigned char * data = testUUID->toBuffer();
+				
+			//hardcodet ObjectUUID
+			
+			
 			sendUDPFrame(ip, data, sizeof(data));
 
 		} else if(decision == 6) {
