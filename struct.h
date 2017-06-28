@@ -160,3 +160,28 @@ typedef struct rpc_Header{
 	
 }RPCHEADER;
 
+//NRD_Data Request/Response
+typedef struct {
+	//keine Ahnung, was da ne sinnvolle zahl ist
+	ArgsMaxStat [4] = 0x04; //Request: maximale Länge des Datenpuffers
+				//Response: maximale Länge PNIOStatus 
+				/*PNIO-Status:
+				 This field shall be coded as data type Unsigned32. The byte ordering shall be according to the
+					value of the field RPCDRep (little endian or big endian) within the first field of the
+					NDRDataResponse. In all other cases the byte ordering shall be big endian.
+					The content is defined in 6 .2.4.68. The PNIOStatus shall be calculated according the following
+					equation.
+				PNIOStatus =
+				ErrorCode × 16 777 216 +
+				ErrorDecode × 65 536 +
+				ErrorCode1 × 256 +
+				(48)
+				ErrorCode2
+	
+ArgsLength 4 die Länge der Daten
+MaximumCount 4 selber Wert wie ArgsMaximum, bei
+einer Response gleich der des
+Requests
+Offset 4 0
+ActualCount 4 selber Wert wie in ArgsLength
+} NRD_Data
