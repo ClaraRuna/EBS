@@ -5,20 +5,49 @@
 #define RPC_HEADER_LENGTH 80
 
 //initialize static variable with 0;
+<<<<<<< HEAD
+long rpc_Header::headerCount = 0;
+=======
 long rpc_Header::headerCount=0; 
 
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 
 
 //default: activity, beliebig, dient nur identifikation
 uu_id::uu_id():
+<<<<<<< HEAD
+		field1{0x42, 0x42, 0x42, 0x42},
+		field2{0x42, 0x42},     
+=======
 		field1{0x42, 0x42,0x42,0x42},
 		field2{0x42, 0x42}     ,     
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 		field3{0x42, 0x42},
 		field4{0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42}
 {
 }
 
 uu_id::uu_id(device*  object):
+<<<<<<< HEAD
+		field1{0xDE, 0xA0, 0x00, 0x00},
+		field2{0x6C, 0x97},     
+		field3{0x11, 0xD1},
+		field4{0x82, 0x71, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+{
+	field4[2] = 0x00; 	//höherwertiges byte der Instanz -> 0x00 bei IO-Divices/-Controler
+	if(object->devRole == 0x02) { //IO-Controler
+		field4[3] = 0x64;	//niederwertiges byte der Instanz 
+	} else {	//IO-Device (oder Supervisor)
+		field4[3] = 0x01;	//niederwertiges byte der Instanz 
+	}
+	
+	//reihenfolge tauschen?
+	field4[4]=object->device_id[1];
+	field4[5]=object->device_id[0];	
+	
+	field4[6]=object->vendor_id[1];
+	field4[7]=object->vendor_id[0];
+=======
 		field1{0xDE, 0xA0,0x00,0x00},
 		field2{0x6C, 0x97}     ,     
 		field3{0x11, 0xD1},
@@ -34,11 +63,14 @@ uu_id::uu_id(device*  object):
 	
 	field4[6]=object->vendor_id[0];
 	field4[7]=object->vendor_id[1];
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 }
 
 //konstruktor für interfaceUUID is noch n dummy, da interface noch nicht implementiert ist
 //alles, wo 0x00 steht muss noch ausgefüllt werden -> allgemein unsicher, wie interface sinnvoll umzusetzen wäre
 
+<<<<<<< HEAD
+=======
 /*
 feld1
 IO-Device → DEA00001
@@ -46,6 +78,7 @@ IO-Controller → DEA00002
 IO-Supervisor → DEA00003
 IO-Parameterserver → DEA00004*/ 
 
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 //vllt statt interface ne device-role übergeben (is ja n struct)
 uu_id::uu_id(device_role * role):
 		field2{0x6C, 0x97}     ,     
@@ -61,8 +94,13 @@ uu_id::uu_id(device_role * role):
 	//parameterserver?? device_role kann auch multidevice sein (0x04) -> was dann??
 }
 
+<<<<<<< HEAD
+unsigned char * uu_id::toBuffer() {
+	unsigned char * buffer^= (unsigned char*)malloc(16);
+=======
 unsigned char * uu_id::toBuffer(){
 	unsigned char * buffer= (unsigned char*)malloc(16);
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 	
 	for (int i=0; i < 4; i++){
 		buffer[i]=field1[i];
@@ -72,6 +110,11 @@ unsigned char * uu_id::toBuffer(){
 		buffer[i+4]=field2[i];
 		buffer[i+6]=field3[i];
 	}
+<<<<<<< HEAD
+	for (int i=0; i<8; i++){
+		buffer[i+8]=field4[i];
+	}
+=======
 	
 	//std::cout<<"//";
 	for (int i=0; i<8; i++){
@@ -79,6 +122,7 @@ unsigned char * uu_id::toBuffer(){
 	//	std::cout << buffer[i] <<" ";
 	}
 	
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 	return buffer;
 }	
 
@@ -119,6 +163,34 @@ unsigned char *  rpc_Header::toBuffer(){
 	
 	buffer[78]=authentificationProtocoll;
 	buffer[79]=serialLow;
+<<<<<<< HEAD
+	return buffer;
+}
+
+void rpc_Header::construct(){
+		version = 0x04;
+		flags1  = 0b00000100; //little-, & big-endian? --> geraten!
+		flags2  = 0b00000000; //bit 1 -> "abbruch lag am aufrufende vor" ???? was? 0 oder 1 jetzt??
+		dRep[0] = 0b11111111; //Encoding EBCDIC & Little Endian
+		dRep[1] = 0x00; //IEEE Floating Point
+		dRep[2] = 0x00; //keine Bedeutung, sollen 0 sein
+		serialHigh = 0x00; //das höherwertige Byte der Fragmentnummer des Aufrufs
+		//ObjectUUID
+		//InterfaceUUID
+		//ActivityUUID
+		serverBootTime[0] = 0x00;
+		serverBootTime[1] = 0x00;
+		serverBootTime[2] = 0x00;
+		serverBootTime[3] = 0x00;
+		interfaceVersion[0] = 0x00;
+		interfaceVersion[1] = 0x00;
+		interfaceVersion[2] = 0x00;
+		interfaceVersion[3] = 0x01;
+		
+		memcpy(&sequenceNumber, &headerCount, 4*sizeof(u_char)); //sequenceNumber
+		headerCount++;
+		//operationNumber
+=======
 	//
 	return buffer;
 }
@@ -136,10 +208,19 @@ void rpc_Header::construct(){
 		memcpy(&sequenceNumber, &headerCount, 4*sizeof(u_char));
 		headerCount++;
 				
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 		interfaceHint[0] = 0xFF;
 		interfaceHint[1] = 0xFF;
 		activityHint[0] = 0xFF;
 		activityHint[1] = 0xFF;
+<<<<<<< HEAD
+		//LengthOfBody
+		fragmentNumber[0]=0x00; //default: keine Fragmentierung
+		fragmentNumber[1]=0x00;
+
+		authenticationProtocoll = 0x00; //0 = keine Authentifikation
+		serialLow = 0x00; //das niederwertige Byte der Fragmentnummer des Aufrufs
+=======
 		//default: keine Fragmentierung
 		fragmentNumber[0]=0x00;
 		fragmentNumber[1]=0x00;
@@ -148,13 +229,20 @@ void rpc_Header::construct(){
 		
 		
 		//TODO: andere Felder setzen
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 	}
 
 rpc_Header::rpc_Header(uu_id * oUUID, uu_id * iUUID, uu_id * aUUID){
 		construct();
+<<<<<<< HEAD
+		objectUUID = oUUID;
+		interfaceUUID = iUUID;
+		activityUUID = aUUID;
+=======
 		objectUUID=oUUID;
 		interfaceUUID=iUUID;
 		activityUUID=aUUID;
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 		//hier u_char <-> int probleme zu erwarten,  bei ausgabe static_cast <unsigned> ??
 		//allgemein zu testzwecken noch suboptimal umgesetzt
 	}
@@ -162,4 +250,8 @@ rpc_Header::rpc_Header(uu_id * oUUID, uu_id * iUUID, uu_id * aUUID){
 		
 rpc_Header::rpc_Header(){
 		construct();
+<<<<<<< HEAD
 	}
+=======
+	}
+>>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
