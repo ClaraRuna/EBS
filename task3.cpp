@@ -260,20 +260,22 @@ int main(int argc, char *argv[]) {
 			scanf("%d", &device);
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 
-			
-			
 			//hardcodet ObjectUUID
 			uu_id * oUUID= new uu_id(device_list[device-1]) ;
 			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole));
 			uu_id * aUUID= new uu_id();
 			
-			
 			rpc_Header * testHeader=new rpc_Header(oUUID, iUUID,  aUUID);
 			
-			unsigned char * data = testHeader->toBuffer();
-			std::cout<<"sizeof(data)"<<sizeof(*data)<<std::endl;
 			
-			sendUDPFrame(ip, data, RPC_HEADER_LENGTH);
+			unsigned char* data = (unsigned char*)malloc(164);
+			unsigned char* header = testHeader->toBuffer(); 
+			
+			memcpy(data, header, 164*sizeof(u_char));
+			
+			std::cout<<"sizeof(data)"<<sizeof(data)<<std::endl;
+			
+			sendUDPFrame(ip, data, 164);
 
 
 		} else if(decision == 6) {

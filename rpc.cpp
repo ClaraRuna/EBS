@@ -3,9 +3,12 @@
 #include "header.h"
 
 #define RPC_HEADER_LENGTH 80
+#define NRDDATA_LENGTH 20
+
 
 //initialize static variable with 0;
 long rpc_Header::headerCount=0; 
+short IODHeader::SeqNumberCount=0;
 
 //default: activity, beliebig, dient nur identifikation
 uu_id::uu_id():
@@ -13,6 +16,15 @@ uu_id::uu_id():
 		field2{0x42, 0x42}     ,     
 		field3{0x42, 0x42},
 		field4{0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42}
+{
+}
+
+//für ArUUID implizit i=0
+uu_id::uu_id(u_char i):
+		field1{i, i, i, i},
+		field2{i,i},     
+		field3{i,i},
+		field4{i,i,i,i,i,i,i,i}
 {
 }
 
@@ -96,11 +108,11 @@ unsigned char *  rpc_Header::toBuffer(){
 	buffer[6]=dRep[2];
 	buffer[7]=serialHigh;
 	//8 bis 23 : objectUUID: memcpy??
-	memcpy(&buffer[8], objectUUID, 16*sizeof(u_char));
+	memcpy(&buffer[8], objectUUID->toBuffer(), 16*sizeof(u_char));
 	//24 bis 39 : interfaceUUID
-	memcpy(&buffer[24], interfaceUUID, 16*sizeof(u_char));
+	memcpy(&buffer[24], interfaceUUID->toBuffer(), 16*sizeof(u_char));
 	//40 bis 55: activityUUID
-	memcpy(&buffer[40], activityUUID, 16*sizeof(u_char));
+	memcpy(&buffer[40], activityUUID->toBuffer(), 16*sizeof(u_char));
 	//vorerst nur 0en:
 	
 	//56-59 serverBootTime, 60-63 interfaceVersion, 64-67 sequenceNumber
@@ -125,53 +137,170 @@ unsigned char *  rpc_Header::toBuffer(){
 }
 
 void rpc_Header::construct(){
-		version = 0x04;
-		flags1  = 0b00000100; //little-, & big-endian? --> geraten!
-		flags2  = 0b00000000; //bit 1 -> "abbruch lag am aufrufende vor" ???? was? 0 oder 1 jetzt??
-		dRep[0] = 0b11111111; //Encoding EBCDIC & Little Endian
-		dRep[1] = 0x00; //IEEE Floating Point
-		dRep[2] = 0x00; //keine Bedeutung, sollen 0 sein
-		serialHigh = 0x00; //das höherwertige Byte der Fragmentnummer des Aufrufs
-		//ObjectUUID
-		//InterfaceUUID
-		//ActivityUUID
-		serverBootTime[0] = 0x00;
-		serverBootTime[1] = 0x00;
-		serverBootTime[2] = 0x00;
-		serverBootTime[3] = 0x00;
-		interfaceVersion[0] = 0x00;
-		interfaceVersion[1] = 0x00;
-		interfaceVersion[2] = 0x00;
-		interfaceVersion[3] = 0x01;
-		
-		memcpy(&sequenceNumber, &headerCount, 4*sizeof(u_char)); //sequenceNumber
-		headerCount++;
-		//operationNumber
+	version = 0x04;
+	packetType=0x00;
+	flags1  = 0b00000100; //little-, & big-endian? --> geraten!
+	flags2  = 0b00000000; //bit 1 -> "abbruch lag am aufrufende vor" ???? was? 0 oder 1 jetzt??
+	dRep[0] = 0b00000000;
+	//dRep[0] = 0b11110000; //Encoding ASCII & Little Endian
+	dRep[1] = 0x00; //IEEE Floating Point
+	dRep[2] = 0x00; //keine Bedeutung, sollen 0 sein
+	serialHigh = 0x00; //das höherwertige Byte der Fragmentnummer des Aufrufs
+	//ObjectUUID
+	//InterfaceUUID
+	//ActivityUUID
+	serverBootTime[0] = 0x00;
+	serverBootTime[1] = 0x00;
+	serverBootTime[2] = 0x00;
+	serverBootTime[3] = 0x00;
+	interfaceVersion[0] = 0x00;
+	interfaceVersion[1] = 0x00;
+	interfaceVersion[2] = 0x00;
+	interfaceVersion[3] = 0x01;
 
-		interfaceHint[0] = 0xFF;
-		interfaceHint[1] = 0xFF;
-		activityHint[0] = 0xFF;
-		activityHint[1] = 0xFF;
-		//LengthOfBody
-		fragmentNumber[0]=0x00; //default: keine Fragmentierung
-		fragmentNumber[1]=0x00;
-
-		authentificationProtocoll = 0x00; //0 = keine Authentifikation
-		serialLow = 0x00; //das niederwertige Byte der Fragmentnummer des Aufrufs
-	}
+	memcpy(&sequenceNumber, &headerCount, 4*sizeof(u_char)); //sequenceNumber
+	headerCount++;
+	//little/big endian??
+	operationNumber[0] = 0x00;
+	operationNumber[1] = 0x05;
+	
+	interfaceHint[0] = 0xFF;
+	interfaceHint[1] = 0xFF;
+	activityHint[0] = 0xFF;
+	activityHint[1] = 0xFF;
+	//little/big endian??
+	lengthOfBody[0] = 0x00;
+	lengthOfBody[1] = 0x54;
+	fragmentNumber[0] = 0x00; //default: keine Fragmentierung
+	fragmentNumber[1] = 0x00;
+	authentificationProtocoll = 0x00; //0 = keine Authentifikation
+	serialLow = 0x00; //das niederwertige Byte der Fragmentnummer des Aufrufs
+}
 
 rpc_Header::rpc_Header(uu_id * oUUID, uu_id * iUUID, uu_id * aUUID){
-		construct();
-
-		objectUUID = oUUID;
-		interfaceUUID = iUUID;
-		activityUUID = aUUID;
-		//hier u_char <-> int probleme zu erwarten,  bei ausgabe static_cast <unsigned> ??
-		//allgemein zu testzwecken noch suboptimal umgesetzt
-	}
+	construct();
+	objectUUID = oUUID;
+	interfaceUUID = iUUID;
+	activityUUID = aUUID;
+	//hier u_char <-> int probleme zu erwarten,  bei ausgabe static_cast <unsigned> ??
+	//allgemein zu testzwecken noch suboptimal umgesetzt
+}
 	
 		
 rpc_Header::rpc_Header(){
-		construct();
-	}
+	construct();
+}
 
+NRDData::NRDData(){
+	//Standard:Request
+	for (int i=0 ; i<4 ; i++){
+		ArgsMaxStat [i] = 0xFF;
+		ArgsLength[i] = 0x00;
+		MaxCount[i] = 0x42;
+		Offset[i] = 0x00;
+		ActualCount[i] = 0x00;
+	}
+}
+
+unsigned char *  NRDData::toBuffer(){
+	unsigned char* buffer = (unsigned char*)malloc(sizeof(NRDData));
+	for (int i =0; i<4; i++){
+		buffer[i] = ArgsMaxStat [i];
+		buffer[4+i] = ArgsLength [i];
+		buffer[8+i] = MaxCount [i];
+		buffer[12+i] = Offset [i];
+		buffer[16] = ActualCount [i];
+	}
+	return buffer;
+}
+
+BlockHeader::BlockHeader(){
+	
+	//little/big endian?
+	BlockType[0] = 0x00;
+	BlockType[1] = 0x20;
+	//little/big endian?
+	//wahrscheinlich 2 bei request
+	BlockLength[0] = 0x02;
+	BlockLength[1] = 0x00;
+	BlockVersionHigh = 0x01;
+	BlockVersionLow = 0x00;		//in manchen fällen auch 1
+	
+}
+
+unsigned char *  BlockHeader::toBuffer(){
+	unsigned char* buffer = (unsigned char*)malloc(sizeof(BlockHeader));
+	buffer[0] = BlockType[0];
+	buffer[1] = BlockType[1];
+	buffer[2] = BlockLength[0];
+	buffer[3] = BlockLength[1];
+	buffer[4] = BlockVersionHigh;
+	buffer[5] = BlockVersionLow;
+	
+	return buffer;
+}
+
+IODHeader::IODHeader(BlockHeader bHeader){
+	blockHeader = bHeader;
+	memcpy(&SeqNumber, &SeqNumberCount, 2*sizeof(u_char)); //sequenceNumber
+	SeqNumberCount++;
+	ArUUID= * new uu_id (static_cast <u_char> (0)) ; //0 weil implizite verbindung
+	for (int i=0; i<4; i++){
+		API[i] = 0x00;
+	}
+	//bei i&m0 anfrage slot und subslot nicht ausgewertet
+	for (int i=0; i<2; i++){
+		Slot[i] = 0x00;
+		Subslot[i] = 0x00;
+		Padding1[i] = 0x00;
+	}
+	//Indexnr für I&M0-Filterdaten auslesen
+	
+	//little/big endian
+	Index[0] = 0xF8;
+	Index[1] = 0x40;
+	for (int i=0; i<4; i++){
+		DataLength[i] = 0;
+	}
+	targetArUUID=*new uu_id(static_cast <u_char>(0));
+	for (int i=0; i<8; i++){
+		Padding2[i]=0x00;
+	}
+}
+
+unsigned char *  IODHeader::toBuffer(){
+	unsigned char* buffer = (unsigned char*)malloc(sizeof(IODHeader));
+	
+	unsigned char* bHeader = blockHeader.toBuffer();
+	memcpy(&buffer[0], bHeader, 6*sizeof(u_char)); 
+	
+	//little/big endian
+	buffer[7] = SeqNumber[0];
+	buffer[8] = SeqNumber[1];
+	
+	unsigned char* arID = ArUUID.toBuffer();
+	memcpy(&buffer[9], arID, 16*sizeof(u_char));
+	
+	for (int i=0; i<4; i++){
+		buffer[25+i] = API[i];
+	}
+	
+	for (int i=0 ; i<2; i++){
+		buffer[29+i] = Slot[i];
+		buffer[31+i] = Subslot[i];
+		buffer[33+i] = Padding1[i];
+		buffer[35+i] = Index[i];
+	}
+	for (int i=0; i<4; i++){
+		buffer[37+i] = DataLength[i];
+	}
+	
+	unsigned char* targetID = targetArUUID.toBuffer();
+	memcpy(&buffer[41], targetID, 16*sizeof(u_char));
+	
+	for (int i=0; i<8; i++){
+		buffer[57+i]=Padding2[i];
+	}
+	
+	return buffer;
+}

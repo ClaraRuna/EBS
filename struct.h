@@ -105,11 +105,7 @@ typedef struct dcpDataHeader {
 }dcpDataHeader;
 
 /***********************************************************
-<<<<<<< HEAD
 *************************RCP STRUCTS************************
-=======
-************RCP STRUCTS*************************************
->>>>>>> cfc21bf62f50a6ee6f321b79cf8f6f11b1716aa5
 ***********************************************************/
 
 typedef struct uu_id{ //16 Byte	
@@ -123,44 +119,104 @@ typedef struct uu_id{ //16 Byte
 	//konstruktoren
 	//default: ActivityUUID, weil frei bestimmbar, hat einfach festen Wert in Feldern
 	uu_id();
+	//ArUUID (bzw alles was mit 1 bel zahl gefüllt werden soll
+	uu_id(u_char );
 	//ObjectUUID
 	uu_id(device * object);
 	//InterfaceUUID
 	uu_id(device_role * d);
+	
 	
 	unsigned char * toBuffer();
 }UUID;
 
 typedef struct rpc_Header{
 	u_char version;
-	u_char packetType; //Request, Response, Ping, etc
+	u_char packetType;			//Request, Response, Ping, etc
 	u_char flags1;
 	u_char flags2;
-	u_char dRep[3]; //Representation of datatypes 
-	u_char serialHigh; //Das höherwertige Byte der Fragmentnr des Aufrufs? (=fragmentNr[1]?)
+	u_char dRep[3]; 			//Representation of datatypes 
+	u_char serialHigh;			//Das höherwertige Byte der Fragmentnr des Aufrufs? (=fragmentNr[1]?)
 	//UUIDs je 16 Byte
 	struct uu_id * objectUUID; 		
 	struct uu_id * interfaceUUID;		
 	struct uu_id * activityUUID; 		
-	u_char serverBootTime[4]; 			//req -> 0 ; resp -> zeit
-	u_char interfaceVersion[4];			//=1
-	static long headerCount;			//total nr of headers created, needed for counting the seq Nr
-	u_char sequenceNumber[4];			//bei mehr als 255 anfragen muss wahrsch m memcopy und manueller pointerarithmetik gearbeitet werden
+	u_char serverBootTime[4]; 		//req -> 0 ; resp -> zeit
+	u_char interfaceVersion[4];		//=1
+	static long headerCount;		//total nr of headers created, needed for counting the seq Nr
+	u_char sequenceNumber[4];		//bei mehr als 255 anfragen muss wahrsch m memcopy und manueller pointerarithmetik gearbeitet werden
 	u_char operationNumber[2];
-	u_char interfaceHint[2]; 			//fest:0xFFFF
-	u_char activityHint[2]; 			//fest:0xFFFF
-	u_char lengthOfBody[2];				//Länge der dem Header folgenden Daten
-	u_char fragmentNumber[2];			//bei keiner Fragmentierung 0
+	u_char interfaceHint[2]; 		//fest:0xFFFF
+	u_char activityHint[2]; 		//fest:0xFFFF
+	u_char lengthOfBody[2];			//Länge der dem Header folgenden Daten
+	u_char fragmentNumber[2];		//bei keiner Fragmentierung 0
 	u_char authentificationProtocoll;
-	u_char serialLow;					//niederwertiges Byte der Fragmentnr des Aufrufs (=fragmentNr[0]?)
+	u_char serialLow;			//niederwertiges Byte der Fragmentnr des Aufrufs (=fragmentNr[0]?)
 	
-
 	//konstruktoren
 	rpc_Header(uu_id * oUUID, uu_id * iUUID, uu_id * aUUID);
 	rpc_Header();	
-	void construct();	//setzt-standard werte f variablen
+	void construct();			//setzt-standard werte f variablen
 		
 	unsigned char *  toBuffer();		//gibt rpc_Header in Buffer
 	long get_headerCount();
 	
 }RPCHEADER;
+
+//NRDData-Request/Response
+typedef struct NRDData{
+	u_char ArgsMaxStat [4];			// Request: maximale Länge des Datenpuffers 
+			//Response: PNIOStatus:
+				/*This field shall be coded as data type Unsigned32. The byte ordering shall be according to the
+					value of the field RPCDRep (little endian or big endian) within the first field of the
+					NDRDataResponse. In all other cases the byte ordering shall be big endian.
+					The content is defined in 6 .2.4.68. The PNIOStatus shall be calculated according the following
+					equation.
+					PNIOStatus =
+					ErrorCode × 16 777 216 + (48)
+					ErrorDecode × 65 536 +
+					ErrorCode1 × 256 +
+					ErrorCode2*/
+	u_char ArgsLength[4]; 			//länge d daten
+	u_char MaxCount [4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
+	u_char Offset[4]; 			//wird 0
+	u_char ActualCount[4]; 			// = ArgsLength
+	
+	//konstruktor 
+	NRDData();
+	
+	unsigned char *  toBuffer();		//gibt NRDData in Buffer
+	
+}NRDData;
+
+//Blockheader
+typedef struct BlockHeader{
+	u_char BlockType [2];
+	u_char BlockLength [2];
+	u_char BlockVersionHigh;
+	u_char BlockVersionLow;
+	
+	BlockHeader();
+	unsigned char *  toBuffer();		//gibt BlockHeader in Buffer
+} BlockHeader;
+
+//IODHeader
+typedef struct IODHeader{
+	BlockHeader blockHeader;
+	static short SeqNumberCount;
+	u_char SeqNumber[2]; //Hochzählendes Datenfeld beginnend bei 0
+	uu_id ArUUID; // konstr:  = new uu_id(0);
+	u_char API[4]; 
+	u_char Slot[2];
+	u_char Subslot[2];
+	u_char Padding1[2]; //=0
+	u_char Index[2];
+	u_char DataLength[4];
+	uu_id targetArUUID;
+	u_char Padding2[8]; //=0
+	
+	IODHeader(BlockHeader);
+	unsigned char *  toBuffer();		//gibt IODHeader in Buffer
+	
+}IODHeader;
+
