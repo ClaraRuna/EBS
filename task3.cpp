@@ -262,16 +262,26 @@ int main(int argc, char *argv[]) {
 
 			//hardcodet ObjectUUID
 			uu_id * oUUID= new uu_id(device_list[device-1]) ;
-			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole));
+			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole)); //hier eigene Rolle? (Supervisor?)
 			uu_id * aUUID= new uu_id();
 			
 			rpc_Header * testHeader=new rpc_Header(oUUID, iUUID,  aUUID);
+			//testHeader->packetType=0x01; //Ping
+			
+			NRDData * nrdData = new NRDData;
+			
+			BlockHeader * blockHeader = new BlockHeader;
+			IODHeader * iodHeader = new IODHeader(blockHeader);
 			
 			
 			unsigned char* data = (unsigned char*)malloc(164);
 			unsigned char* header = testHeader->toBuffer(); 
+			unsigned char* nrd_data = nrdData->toBuffer();
+			unsigned char* iod_header = iodHeader->toBuffer();
 			
-			memcpy(data, header, 164*sizeof(u_char));
+			memcpy(data, header, 80*sizeof(u_char));
+			memcpy(&data[80], nrd_data, 20*sizeof(u_char)); 
+			memcpy(&data[100], iod_header, 64*sizeof(u_char));
 			
 			std::cout<<"sizeof(data)"<<sizeof(data)<<std::endl;
 			

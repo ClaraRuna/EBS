@@ -202,7 +202,7 @@ typedef struct BlockHeader{
 
 //IODHeader
 typedef struct IODHeader{
-	BlockHeader blockHeader;
+	BlockHeader * blockHeader;
 	static short SeqNumberCount;
 	u_char SeqNumber[2]; //Hochzählendes Datenfeld beginnend bei 0
 	uu_id ArUUID; // konstr:  = new uu_id(0);
@@ -215,7 +215,7 @@ typedef struct IODHeader{
 	uu_id targetArUUID;
 	u_char Padding2[8]; //=0
 	
-	IODHeader(BlockHeader);
+	IODHeader(BlockHeader*);
 	unsigned char *  toBuffer();		//gibt IODHeader in Buffer
 	
 }IODHeader;

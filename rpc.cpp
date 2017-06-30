@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string.h> 
 #include "header.h"
+#include <netinet/in.h>
 
 #define RPC_HEADER_LENGTH 80
 #define NRDDATA_LENGTH 20
@@ -42,11 +43,11 @@ uu_id::uu_id(device*  object):
 	}
 	
 	//reihenfolge tauschen?
-	field4[4]=object->device_id[1];
-	field4[5]=object->device_id[0];	
+	field4[4]=object->device_id[0];
+	field4[5]=object->device_id[1];	
 	
-	field4[6]=object->vendor_id[1];
-	field4[7]=object->vendor_id[0];
+	field4[6]=object->vendor_id[0];
+	field4[7]=object->vendor_id[1];
 
 }
 
@@ -139,7 +140,7 @@ unsigned char *  rpc_Header::toBuffer(){
 void rpc_Header::construct(){
 	version = 0x04;
 	packetType=0x00;
-	flags1  = 0b00000100; //little-, & big-endian? --> geraten!
+	flags1  = 0b00100000; //little-, & big-endian? --> geraten!
 	flags2  = 0b00000000; //bit 1 -> "abbruch lag am aufrufende vor" ???? was? 0 oder 1 jetzt??
 	dRep[0] = 0b00000000;
 	//dRep[0] = 0b11110000; //Encoding ASCII & Little Endian
@@ -158,7 +159,8 @@ void rpc_Header::construct(){
 	interfaceVersion[2] = 0x00;
 	interfaceVersion[3] = 0x01;
 
-	memcpy(&sequenceNumber, &headerCount, 4*sizeof(u_char)); //sequenceNumber
+	long tempHeaderCount=htonl(headerCount); //needed for changing byte order
+	memcpy(&sequenceNumber, &tempHeaderCount, 4*sizeof(u_char)); //sequenceNumber
 	headerCount++;
 	//little/big endian??
 	operationNumber[0] = 0x00;
@@ -194,12 +196,17 @@ rpc_Header::rpc_Header(){
 NRDData::NRDData(){
 	//Standard:Request
 	for (int i=0 ; i<4 ; i++){
-		ArgsMaxStat [i] = 0xFF;
 		ArgsLength[i] = 0x00;
-		MaxCount[i] = 0x42;
 		Offset[i] = 0x00;
 		ActualCount[i] = 0x00;
 	}
+	ArgsMaxStat[0] = MaxCount[0] = 0x00;
+	ArgsMaxStat[1] = MaxCount[1] = 0x00;
+	ArgsMaxStat[2] = MaxCount[2] = 0x02;
+	ArgsMaxStat[3] = MaxCount[3] = 0x51;
+	
+	ArgsLength[3] = 0x40;
+	ActualCount[3] = 0x40;
 }
 
 unsigned char *  NRDData::toBuffer(){
@@ -209,7 +216,7 @@ unsigned char *  NRDData::toBuffer(){
 		buffer[4+i] = ArgsLength [i];
 		buffer[8+i] = MaxCount [i];
 		buffer[12+i] = Offset [i];
-		buffer[16] = ActualCount [i];
+		buffer[16+i] = ActualCount [i];
 	}
 	return buffer;
 }
@@ -218,13 +225,13 @@ BlockHeader::BlockHeader(){
 	
 	//little/big endian?
 	BlockType[0] = 0x00;
-	BlockType[1] = 0x20;
+	BlockType[1] = 0x09; 	//0x20;
 	//little/big endian?
 	//wahrscheinlich 2 bei request
-	BlockLength[0] = 0x02;
-	BlockLength[1] = 0x00;
+	BlockLength[0] = 0x00;  	//60, länge des Rest-IOD-Headers
+	BlockLength[1] = 0x3c;
 	BlockVersionHigh = 0x01;
-	BlockVersionLow = 0x00;		//in manchen fällen auch 1
+	BlockVersionLow = 0x00;		//in manchen fällen auch 1/0
 	
 }
 
@@ -240,7 +247,7 @@ unsigned char *  BlockHeader::toBuffer(){
 	return buffer;
 }
 
-IODHeader::IODHeader(BlockHeader bHeader){
+IODHeader::IODHeader(BlockHeader * bHeader){
 	blockHeader = bHeader;
 	memcpy(&SeqNumber, &SeqNumberCount, 2*sizeof(u_char)); //sequenceNumber
 	SeqNumberCount++;
@@ -262,6 +269,9 @@ IODHeader::IODHeader(BlockHeader bHeader){
 	for (int i=0; i<4; i++){
 		DataLength[i] = 0;
 	}
+	DataLength[2] =0x10; 
+	
+	
 	targetArUUID=*new uu_id(static_cast <u_char>(0));
 	for (int i=0; i<8; i++){
 		Padding2[i]=0x00;
@@ -271,35 +281,35 @@ IODHeader::IODHeader(BlockHeader bHeader){
 unsigned char *  IODHeader::toBuffer(){
 	unsigned char* buffer = (unsigned char*)malloc(sizeof(IODHeader));
 	
-	unsigned char* bHeader = blockHeader.toBuffer();
+	unsigned char* bHeader = blockHeader->toBuffer();
 	memcpy(&buffer[0], bHeader, 6*sizeof(u_char)); 
 	
 	//little/big endian
-	buffer[7] = SeqNumber[0];
-	buffer[8] = SeqNumber[1];
+	buffer[6] = SeqNumber[0];
+	buffer[7] = SeqNumber[1];
 	
 	unsigned char* arID = ArUUID.toBuffer();
-	memcpy(&buffer[9], arID, 16*sizeof(u_char));
+	memcpy(&buffer[8], arID, 16*sizeof(u_char));
 	
 	for (int i=0; i<4; i++){
-		buffer[25+i] = API[i];
+		buffer[24+i] = API[i];
 	}
 	
 	for (int i=0 ; i<2; i++){
-		buffer[29+i] = Slot[i];
-		buffer[31+i] = Subslot[i];
-		buffer[33+i] = Padding1[i];
-		buffer[35+i] = Index[i];
+		buffer[28+i] = Slot[i];
+		buffer[30+i] = Subslot[i];
+		buffer[32+i] = Padding1[i];
+		buffer[34+i] = Index[i];
 	}
 	for (int i=0; i<4; i++){
-		buffer[37+i] = DataLength[i];
+		buffer[36+i] = DataLength[i];
 	}
 	
 	unsigned char* targetID = targetArUUID.toBuffer();
-	memcpy(&buffer[41], targetID, 16*sizeof(u_char));
+	memcpy(&buffer[40], targetID, 16*sizeof(u_char));
 	
 	for (int i=0; i<8; i++){
-		buffer[57+i]=Padding2[i];
+		buffer[56+i]=Padding2[i];
 	}
 	
 	return buffer;
