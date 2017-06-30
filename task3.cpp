@@ -290,7 +290,53 @@ int main(int argc, char *argv[]) {
 
 		} else if(decision == 6) {
 			std::cout << "-----> RPC-Write:\n" << std::endl;
-			std::cout << "TODO ;)\n" << std::endl;
+			
+			int device;
+
+			std::cout << "choose a device: (from which device you want to read?)\n" << std::endl;
+			for(int tmp = 0; tmp < device_list.size(); tmp++) {
+				struct device dev = *device_list[tmp];
+				std::cout << tmp+1 << ". " << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[0])<<":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[1]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[2]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.ipParam.ip[3])
+												<< " <- (" << dev.name << ")" << std::endl;
+			}
+			std::cout << "" << std::endl; //new Line
+
+			scanf("%d", &device);
+			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
+
+			
+			//hardcodet ObjectUUID
+			uu_id * oUUID= new uu_id(device_list[device-1]) ;
+			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole)); //hier eigene Rolle? (Supervisor?)
+			uu_id * aUUID= new uu_id();
+			
+			rpc_Header * testHeader = new rpc_Header(oUUID, iUUID,  aUUID);
+
+			//NRDData -> länge ändern 
+			NRDData * nrdData = new NRDData;
+			long NRDDataSize = 58+sizeof(*argv); 		//argv is ethernetname
+			memcpy(&nrdData->ArgsLength, &NRDDataSize, 4*sizeof(u_char));
+			memcpy(&nrdData->ActualCount, &NRDDataSize, 4*sizeof(u_char));
+			
+			ARBlockRequest * ConnectRequest = new ARBlockRequest;
+			
+			
+			unsigned char* data = (unsigned char*)malloc(80+20+58+sizeof(*argv));
+			
+			
+			unsigned char* header = testHeader->toBuffer(); 
+			unsigned char* nrd_data = nrdData->toBuffer();
+			unsigned char* connectRequest = ConnectRequest->toBuffer();
+			
+			memcpy(data, header, 80*sizeof(u_char));
+			memcpy(&data[80], nrd_data, 20*sizeof(u_char)); 
+			memcpy(&data[100], connectRequest, (58+sizeof(*argv))*sizeof(u_char));
+			
+			
+			sendUDPFrame(ip, data, 164);
 
 		} else {
 			std::cout << "decision not valid!" << std::endl;

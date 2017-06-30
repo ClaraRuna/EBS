@@ -2,6 +2,7 @@
 #include <string.h> 
 #include "header.h"
 #include <netinet/in.h>
+#include <net/if.h>
 
 #define RPC_HEADER_LENGTH 80
 #define NRDDATA_LENGTH 20
@@ -10,6 +11,7 @@
 //initialize static variable with 0;
 long rpc_Header::headerCount=0; 
 short IODHeader::SeqNumberCount=0;
+short ARBlockRequest::sessionKeyCounter=0;
 
 //default: activity, beliebig, dient nur identifikation
 uu_id::uu_id():
@@ -310,6 +312,98 @@ unsigned char *  IODHeader::toBuffer(){
 	
 	for (int i=0; i<8; i++){
 		buffer[56+i]=Padding2[i];
+	}
+	
+	return buffer;
+}
+
+ARBlockRequest::ARBlockRequest(){
+	ARType[0] = 0x00;
+	ARType[1] = 0x06;
+	ArUUID = new uu_id(20);		//20 -> beliebige zahl, die die relation identifiziert
+	
+	memcpy(&sessionKey, &sessionKeyCounter, 2*sizeof(u_char)); 
+	
+	struct ifreq if_mac;
+	memset(&if_mac, 0, sizeof(struct ifreq));
+	strncpy(if_mac.ifr_name, "enp4s0", sizeof ("enp4s0"));
+	
+	CMInitiatorMAC[0] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[0];
+	CMInitiatorMAC[1] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[1];
+	CMInitiatorMAC[2] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[2];
+	CMInitiatorMAC[3] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[3];
+	CMInitiatorMAC[4] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[4];
+	CMInitiatorMAC[5] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[5];
+	
+	CMInitiatorObjectUUID = new uu_id (new device());		//random leeres device, damit wir ne objectuuid haben
+	CMInitiatorObjectUUID->field4[2] = 0x00;			//instanz
+	CMInitiatorObjectUUID->field4[3] = 0x01;			
+	CMInitiatorObjectUUID->field4[4] = 0x01;			//DevID
+	CMInitiatorObjectUUID->field4[5] = 0x03;
+	CMInitiatorObjectUUID->field4[6] = 0x01;			//vendorID
+	CMInitiatorObjectUUID->field4[7] = 0x17;			
+	
+	ArProperties [0] = 0x00;
+	ArProperties [1] = 0x00;
+	ArProperties [2] = 0x01;
+	ArProperties [3] = 0x31;
+	
+	CMInitiatorActivityTimeoutFactor[0] = 0x02;
+	CMInitiatorActivityTimeoutFactor[1] = 0x58;		//sollten 60sek sein (faktor 100ms)
+	
+	InitiatorUDPRTPort[0] = 0x88;
+	InitiatorUDPRTPort[1] = 0x92;
+	
+	StationName = "enp4s0";
+	
+	short NameLength = StationName.size();
+	memcpy (&StationNameLength, &NameLength, 2*sizeof(u_char));
+	
+	blockHeader = new BlockHeader();
+	blockHeader->BlockType[0]=0x01;
+	blockHeader->BlockType[1]=0x01;
+	
+	short size = 54 + StationName.size();		//ARBlockRequest -4 + stationNamelength
+	memcpy(&(blockHeader->BlockLength), &size, 2*sizeof(u_char));
+
+}
+
+unsigned char *  ARBlockRequest::toBuffer(){
+	unsigned char* buffer = (unsigned char*)malloc(sizeof(ARBlockRequest) + StationName.size());
+	
+	unsigned char* bHeader = blockHeader->toBuffer();
+	
+	buffer[6] = ARType[0];
+	buffer[7] = ARType[1];
+	
+	unsigned char* arID = ArUUID->toBuffer();
+	memcpy(&buffer[8], arID, 16*sizeof(u_char));
+	
+	buffer[24]=sessionKey[0];
+	buffer[25]=sessionKey[1];
+	
+	for (int i =0; i<6; i++){
+		buffer[26+i]=CMInitiatorMAC[i];
+	}
+	
+	unsigned char* cmInitiatorObjectUUID = CMInitiatorObjectUUID->toBuffer();
+	memcpy(&buffer[32], cmInitiatorObjectUUID, 16*sizeof(u_char));
+	
+	for (int i = 0 ; i<4; i++){
+		buffer[48+i] = ArProperties[i];
+	}
+	
+	buffer[52] = CMInitiatorActivityTimeoutFactor[0];
+	buffer[53] = CMInitiatorActivityTimeoutFactor[1];
+	
+	buffer[54] = InitiatorUDPRTPort[0];
+	buffer[55] = InitiatorUDPRTPort[1];
+	
+	buffer[56] = StationNameLength[0];
+	buffer[57] = StationNameLength[1];
+	
+	for (int i=0; i<StationName.size(); i++){
+		buffer[58+i] = StationName[i];
 	}
 	
 	return buffer;

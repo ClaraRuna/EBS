@@ -220,3 +220,27 @@ typedef struct IODHeader{
 	
 }IODHeader;
 
+typedef struct ARBlockRequest{
+	BlockHeader * blockHeader;
+	u_char ARType[2];
+	uu_id * ArUUID;
+	static short sessionKeyCounter;
+	u_char sessionKey[2]; 		//muss bei jeder session neu sein
+	u_char CMInitiatorMAC [6]; 	//eigene MAC
+	uu_id * CMInitiatorObjectUUID;
+	u_char ArProperties[4];
+	u_char CMInitiatorActivityTimeoutFactor[2];
+	u_char InitiatorUDPRTPort[2];
+	u_char StationNameLength[2]; 	//Länge des CMInit-Stationnames (unser eigener)
+	std::string StationName;		//zw 1 und 240 Byte
+	
+	ARBlockRequest();
+	unsigned char * toBuffer();
+}ARBlockRequest;
+
+typedef struct IODConnectRequest{
+	ARBlockRequest *arBlockRequest;
+	//da supervisor verbindung keine weiteren Blöcke
+	
+}IODConnectRequest;
+
