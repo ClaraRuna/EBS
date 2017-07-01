@@ -17,6 +17,9 @@
 #include "outstream.h"
 
 #define RPC_HEADER_LENGTH 80
+#define NRD_DATA_LENGTH 20
+#define IOD_HEADER_LENGTH 64
+#define IOD_CONNECT_REQ_LENGTH 58
 
 std::vector <struct device*> device_list; //List of devices, known from Ident-Request
 
@@ -39,7 +42,7 @@ unsigned char serviceID_helloReq = 0x06;
 unsigned char serviceType_Req = 0x00;
 //others for response
 
-unsigned char xID[4] = {0x42, 0x42, 0x42, 0x42}; //zur identifikation - dynamisch?
+unsigned char xID[4] = {0x42, 0x42, 0x42, 0x42}; //for identification - dynamic?
 
 unsigned char respDelayFactor_answer[2] = {0x00, 0x00};
 unsigned char respDelayFactor_withoutImpact[2] = {0x00, 0x01};
@@ -104,7 +107,9 @@ int main(int argc, char *argv[]) {
 		std::cout << "5. RPC - Read     - Press 5" << std::endl;
 		std::cout << "6. RPC - Write    - Press 6\n" << std::endl;
 
-		scanf("%d", &decision);
+		std::cin >> decision;
+		std::cin.clear();
+		std::cin.ignore();
 
 		if(decision == 1) {
 			std::cout << "-----> Hello-Request:\n" << std::endl;
@@ -125,23 +130,32 @@ int main(int argc, char *argv[]) {
 			for(int tmp = 0; tmp < device_list.size(); tmp++) {
 				struct device dev = *device_list[tmp];
 				std::cout << tmp+1 << ". " << dev.name << ":		" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[0])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[1])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[2])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[3])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[4])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[5]) <<std::endl;
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[1]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[2]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[3]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[4]) << ":"
+												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[5]) << std::endl;
 			}
-
-			std::cout << "" << std::endl;
-			scanf("%d", &device);
+			std::cout << "" << std::endl; //new Line
+			
+			do {
+				std::cin >> device;
+				std::cin.clear();
+				std::cin.ignore();	
+			} while (device < 1 || device > device_list.size());
+			
 			unsigned char mac[6] = {device_list[device-1]->MAC[0], device_list[device-1]->MAC[1], device_list[device-1]->MAC[2], device_list[device-1]->MAC[3], device_list[device-1]->MAC[4], device_list[device-1]->MAC[5]};
 
 			std::cout << "\nchoose option and subotion: (which parameter you want to read?)\n" << std::endl;
 			
-			std::cout<<device_list[device-1]->options<<std::endl;
+			std::cout << device_list[device-1]->options << std::endl;
 			
-			scanf("%i", &param);
-			
+			do {
+				std::cin >> param;
+				std::cin.clear();
+				std::cin.ignore();
+			} while (param < 1 || param > device_list[device-1]->options.size());	//TODO: Was wenn keine Options?
+
 			unsigned char option = device_list[device - 1]->options[param - 1]->opt;
 			unsigned char subOption = device_list[device - 1]->options[param -1]->subopt;
 
@@ -160,22 +174,32 @@ int main(int argc, char *argv[]) {
 			for(int tmp = 0; tmp < device_list.size(); tmp++) {
 				struct device dev = *device_list[tmp];
 				std::cout << tmp+1 << ": " << dev.name << ":	" <<static_cast <unsigned> (dev.MAC[0])<<":"
-												<<static_cast <unsigned> (dev.MAC[1])<<":"
-												<<static_cast <unsigned> (dev.MAC[2])<<":"
-												<<static_cast <unsigned> (dev.MAC[3])<<":"
-												<<static_cast <unsigned> (dev.MAC[4])<<":"
-												<<static_cast <unsigned> (dev.MAC[5]) <<std::endl;
+												<< static_cast <unsigned> (dev.MAC[1]) << ":"
+												<< static_cast <unsigned> (dev.MAC[2]) << ":"
+												<< static_cast <unsigned> (dev.MAC[3]) << ":"
+												<< static_cast <unsigned> (dev.MAC[4]) << ":"
+												<< static_cast <unsigned> (dev.MAC[5]) << std::endl;
 			}
-			std::cout << "" << std::endl;
-			scanf("%d", &device);
+			std::cout << "" << std::endl; //new Line
+
+			do {
+				std::cin >> device;
+				std::cin.clear();
+				std::cin.ignore();
+			} while (device < 1 || device > device_list.size());
+
 			unsigned char mac[6] = {device_list[device-1]->MAC[0], device_list[device-1]->MAC[1], device_list[device-1]->MAC[2], device_list[device-1]->MAC[3], device_list[device-1]->MAC[4], device_list[device-1]->MAC[5]};
 
 			std::cout << "choose parameter: (which one you want to edit?)\n" << std::endl;
 			std::cout << "1. Set IP-Adress? - Press 1:" << std::endl;
 			std::cout << "2. Set Device-Name? - Press 2:\n" << std::endl;
 
-			scanf("%i", &option);
-			
+			do{
+				std::cin >> option;
+				std::cin.clear();
+				std::cin.ignore();
+			} while (option < 1 || option > device_list[device-1]->options.size());	//TODO: Was wenn keine Options?
+
 			//always equal in Set-Request
 			struct dcpHeader dcpHeader_setReq(serviceID_setReq, serviceType_Req, xID, respDelayFactor_answer, dataLength_setIP);
 			struct dcpDataHeader dcpDataHeader_setReq(0x00, 0x00, lengthIP, status);
@@ -190,21 +214,26 @@ int main(int argc, char *argv[]) {
 				std::cout << "& another 4 numbers between 0 and 255 for new standardGateway!" << std::endl;
 				
 				unsigned int tmp;
-				unsigned char data[48];
+				unsigned char ipData[48];
 
 				for(int i = 0; i<12; i++) {
-					scanf("%u", &tmp);
+					std::cin >> tmp;
+					std::cin.clear();
+					std::cin.ignore();
 					if(tmp >= 0 && tmp <= 255) {
-						data[0+i] = tmp;
+						ipData[0+i] = tmp;
 					} else {
-						printf("invalid! again!\n");
+						std::cout << "invalid! try again!" << std::endl;
 						i--;
 					}
-					if(i == 3) printf("subnetmasc:\n");
-					if(i == 7) printf("standardGateway:\n");
-				}		
-				sendDCPFrame(mac, etherType_profiNET, frameID_setReq, dcpHeader_setReq, dcpDataHeader_setReq, data);
+					if(i == 3) std::cout << "subnetMasc:" << std::endl;
+					if(i == 7) std::cout << "standardGateway:" << std::endl;
+				}
+				//send DCP-Freme to set new IP-Param
+				sendDCPFrame(mac, etherType_profiNET, frameID_setReq, dcpHeader_setReq, dcpDataHeader_setReq, ipData);
 
+				//Change IP-Param in local device-List
+				memcpy(&device_list[device-1]->ipParam, ipData, 12*sizeof(u_char));
 
 			} else if(option == 2) { //edit Device-Name
 				std::cout << "-----> Edit DeviceName:" << std::endl;
@@ -213,21 +242,21 @@ int main(int argc, char *argv[]) {
 
 				std::cout << "Please enter a new Name!" << std::endl;
 
-				std::string name;
+				std::string newDeviceName;
 
-				std::cin >> name;
+				std::cin >> newDeviceName;
 
-				unsigned int len = name.size() + 2;
+				unsigned int len = newDeviceName.size() + 2; //+ length of status
 
 				unsigned char *deviceName = new unsigned char[len+1];
-				strcpy((char *)deviceName , name.c_str());
+				strcpy((char *)deviceName , newDeviceName.c_str());
 
 				dcpDataHeader_setReq.length[0] = len / 256;
 				dcpDataHeader_setReq.length[1] = len % 256;
 
 				unsigned int tmpLength = 4 + len;
 				if(len %2 == 1) {
-					tmpLength ++;
+					tmpLength ++; //increment
 					dcpHeader_setReq.dcpDataLength[0] = tmpLength / 256;
 					dcpHeader_setReq.dcpDataLength[1] = tmpLength % 256;
 				} else {
@@ -235,10 +264,15 @@ int main(int argc, char *argv[]) {
 					dcpHeader_setReq.dcpDataLength[1] = tmpLength % 256;
 				}
 				
+				//send DCP-Freme to set new device-Name
 				sendDCPFrame(mac, etherType_profiNET, frameID_setReq, dcpHeader_setReq, dcpDataHeader_setReq, deviceName);
+
+				//Change Device-Name in local device_list
+				device_list[device-1]->name = newDeviceName;
 
 			} else {
 				std::cout << "option not valid!" << std::endl;
+				std::cout << "Please try again!\n" << std::endl;
 			}
 
 		} else if(decision == 5) {
@@ -257,7 +291,12 @@ int main(int argc, char *argv[]) {
 			}
 			std::cout << "" << std::endl; //new Line
 
-			scanf("%d", &device);
+			do {
+				std::cin >> device;
+				std::cin.clear();
+				std::cin.ignore();
+			} while (device < 1 || device > device_list.size());
+			
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 
 			//hardcodet ObjectUUID
@@ -304,9 +343,13 @@ int main(int argc, char *argv[]) {
 			}
 			std::cout << "" << std::endl; //new Line
 
-			scanf("%d", &device);
-			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
+			do {
+				std::cin >> device;
+				std::cin.clear();
+				std::cin.ignore();
+			} while (device < 1 || device > device_list.size());
 
+			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 			
 			//hardcodet ObjectUUID
 			uu_id * oUUID= new uu_id(device_list[device-1]) ;
@@ -322,8 +365,7 @@ int main(int argc, char *argv[]) {
 			memcpy(&nrdData->ActualCount, &NRDDataSize, 4*sizeof(u_char));
 			
 			ARBlockRequest * ConnectRequest = new ARBlockRequest;
-			
-			
+						
 			unsigned char* data = (unsigned char*)malloc(80+20+58+sizeof(*argv));
 			
 			
@@ -340,6 +382,7 @@ int main(int argc, char *argv[]) {
 
 		} else {
 			std::cout << "decision not valid!" << std::endl;
+			std::cout << "Please try again!" << std::endl;
 		}
 	}
 	return 0;
