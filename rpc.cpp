@@ -23,10 +23,11 @@ short ARBlockRequest::sessionKeyCounter = 0;
 char etherName[IFNAMSIZ]; //Name of Ethernetport
 
 void setEtherName(char *argv[]) {
-	if(argv != NULL)
+	if(argv != NULL) {
 		strcpy(etherName, argv[1]);
-	else
+	} else {
 		strcpy(etherName, DEFAULT_IF);
+	}
 }
 
 //default: activity, beliebig, dient nur identifikation
@@ -213,7 +214,7 @@ rpc_Header::rpc_Header(){
 
 NRDData::NRDData(){
 	//Standard:Request
-	for (int i=0 ; i<4 ; i++){
+	for (int i = 0 ; i < 4 ; i++) {
 		ArgsLength[i] = 0x00;
 		Offset[i] = 0x00;
 		ActualCount[i] = 0x00;
@@ -229,12 +230,12 @@ NRDData::NRDData(){
 
 unsigned char *  NRDData::toBuffer(){
 	unsigned char* buffer = (unsigned char*)malloc(sizeof(NRDData));
-	for (int i =0; i<4; i++){
-		buffer[i] = ArgsMaxStat [i];
-		buffer[4+i] = ArgsLength [i];
-		buffer[8+i] = MaxCount [i];
-		buffer[12+i] = Offset [i];
-		buffer[16+i] = ActualCount [i];
+	for (int i = 0; i < 4; i++){
+		buffer[i] 	 = ArgsMaxStat[i];
+		buffer[4+i]  = ArgsLength[i];
+		buffer[8+i]  = MaxCount[i];
+		buffer[12+i] = Offset[i];
+		buffer[16+i] = ActualCount[i];
 	}
 	return buffer;
 }
@@ -270,11 +271,11 @@ IODHeader::IODHeader(BlockHeader * bHeader){
 	memcpy(&SeqNumber, &SeqNumberCount, 2*sizeof(u_char)); //sequenceNumber
 	SeqNumberCount++;
 	ArUUID= * new uu_id (static_cast <u_char> (0)) ; //0 weil implizite verbindung
-	for (int i=0; i<4; i++){
+	for (int i = 0; i < 4; i++) {
 		API[i] = 0x00;
 	}
 	//bei i&m0 anfrage slot und subslot nicht ausgewertet
-	for (int i=0; i<2; i++){
+	for (int i = 0; i < 2; i++) {
 		Slot[i] = 0x00;
 		Subslot[i] = 0x00;
 		Padding1[i] = 0x00;
@@ -284,19 +285,19 @@ IODHeader::IODHeader(BlockHeader * bHeader){
 	//little/big endian
 	Index[0] = 0xF8;
 	Index[1] = 0x40;
-	for (int i=0; i<4; i++){
+	for (int i = 0; i < 4; i++) {
 		DataLength[i] = 0;
 	}
-	DataLength[2] =0x10; 
+	DataLength[2] = 0x10; 
 	
 	
 	targetArUUID=*new uu_id(static_cast <u_char>(0));
-	for (int i=0; i<8; i++){
+	for (int i = 0; i < 8; i++) {
 		Padding2[i]=0x00;
 	}
 }
 
-unsigned char *  IODHeader::toBuffer(){
+unsigned char *  IODHeader::toBuffer() {
 	unsigned char* buffer = (unsigned char*)malloc(sizeof(IODHeader));
 	
 	unsigned char* bHeader = blockHeader->toBuffer();
@@ -338,7 +339,9 @@ ARBlockRequest::ARBlockRequest(){
 	ARType[1] = 0x06;
 	ArUUID = new uu_id(20);		//20 -> beliebige zahl, die die relation identifiziert
 	
-	memcpy(&sessionKey, &sessionKeyCounter, 2*sizeof(u_char)); 
+	sessionKey[0] = sessionKeyCounter / 256;
+	sessionKey[1] = sessionKeyCounter & 256;
+	sessionKeyCounter++;
 	
 	struct ifreq if_mac;
 	memset(&if_mac, 0, sizeof(struct ifreq));
@@ -373,7 +376,8 @@ ARBlockRequest::ARBlockRequest(){
 	InitiatorUDPRTPort[0] = 0x88;
 	InitiatorUDPRTPort[1] = 0x92;
 	
-	short NameLength = sizeof(etherName);
+	short NameLength = sizeof(etherName) - 1;
+	std::cout << "Testnamenlänge: " << sizeof(etherName) << std::endl;
 	StationNameLength[0] = NameLength / 256;
 	StationNameLength[1] = NameLength % 256;
 	
@@ -424,9 +428,12 @@ unsigned char *  ARBlockRequest::toBuffer(){
 	buffer[56] = StationNameLength[0];
 	buffer[57] = StationNameLength[1];
 	
-	for (int i=0; i<StationName.size(); i++){
-		buffer[58+i] = StationName[i];
+	std::cout << etherName << std::endl;
+	std::cout << StationNameLength << std::endl;
+
+	for (int i = 0; i < sizeof(etherName); i++){
+		buffer[58+i] = etherName[i];
 	}
-	
+
 	return buffer;
 }

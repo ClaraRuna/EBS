@@ -8,3 +8,4 @@ sudo ./task2.out [nameOfEthernet]
 
 filtern wireshark
 ip.addr == 172.16.4.152 and !dns
+ip.addr == 172.16.4.160 and !dns

@@ -56,6 +56,7 @@ unsigned char status[2] = {0x00, 0x00};
 unsigned char length[2] = {0x00, 0x00};
 unsigned char lengthIP[2] = {0x00, 0x0E};
 
+int etherNameLength = 0;
 
 int main(int argc, char *argv[]) {
 
@@ -63,9 +64,11 @@ int main(int argc, char *argv[]) {
 	if (argc > 1) {
 		setIfName(argv);
 		setEtherName(argv);
+		etherNameLength = sizeof(*argv) - 1;
 	} else {
 		setIfName(NULL);
 		setEtherName(NULL);
+		etherNameLength = 15;
 	}
 
 	std::cout << "----------ProfiNET-Tool----------\n" << std::endl;
@@ -93,11 +96,11 @@ int main(int argc, char *argv[]) {
 	std::cout << "Identification of " << device_list.size() << " Devices:" << std::endl;
 	std::cout << "" << std::endl; //new line
 	for(int i = 0; i < device_list.size(); i++) {
-		std::cout << *device_list[i] <<std::endl;
+		std::cout << *device_list[i];
 	}
+	std::cout << std::endl;
 
-	int decision;
-
+	int decision; //for maintask
 	while(1) {
 		decision = 0;
 		usleep(1000000);
@@ -323,7 +326,7 @@ int main(int argc, char *argv[]) {
 			BlockHeader * blockHeader = new BlockHeader;
 			IODHeader * iodHeader = new IODHeader(blockHeader);
 			
-			
+			//Data to buffer:
 			unsigned char* data = (unsigned char*)malloc(RPC_HEADER_LENGTH + NRD_DATA_LENGTH + IOD_HEADER_LENGTH);
 			unsigned char* header = testHeader->toBuffer(); 
 			unsigned char* nrd_data = nrdData->toBuffer();
@@ -362,36 +365,39 @@ int main(int argc, char *argv[]) {
 
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 			
-			//hardcodet ObjectUUID
+			//*********BUILD CONNECT-FRAME*************
+			//Längen:
+			int afterNRDDataSize = IOD_CONNECT_REQ_LENGTH + etherNameLength;
+			int afterRPCDataSize = afterNRDDataSize + NRD_DATA_LENGTH;
+
+			//create UUID´s for rpc-Header
 			uu_id * oUUID= new uu_id(device_list[device-1]) ;
-			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole)); //hier eigene Rolle? (Supervisor?)
+			uu_id * iUUID= new uu_id(&(device_list[device-1]->devRole));
 			uu_id * aUUID= new uu_id();
-			
+			//create rpc-Header
 			rpc_Header * testHeader = new rpc_Header(oUUID, iUUID,  aUUID);
-
-			//Operation: Connect (0x0000)
+			//change Operation (in rpc-Header): Connect (0x0000)
 			testHeader->operationNumber[0] = testHeader->operationNumber[1] = 0x00;
+			//change Length in rpc-Header
+			testHeader->lengthOfBody[0] = afterRPCDataSize / 256;
+			testHeader->lengthOfBody[1] = afterRPCDataSize % 256;
 			
-			//NRDData -> länge ändern 
+			//create NRDData-Header
 			NRDData * nrdData = new NRDData;
-			long NRDDataSize = IOD_CONNECT_REQ_LENGTH+sizeof(*argv); 		//argv is ethernetname
-
+			
 			nrdData->ArgsMaxStat[0] = nrdData->MaxCount[0] = 0x00;
 			nrdData->ArgsMaxStat[1] = nrdData->MaxCount[1] = 0x00;
 			nrdData->ArgsMaxStat[2] = nrdData->MaxCount[2] = 0x01;
 			nrdData->ArgsMaxStat[3] = nrdData->MaxCount[3] = 0xd0;
 
-			nrdData->ArgsLength[0] = nrdData->ActualCount[0] = 0x00;
-			nrdData->ArgsLength[1] = nrdData->ActualCount[1] = 0x00;
-			nrdData->ArgsLength[2] = nrdData->ActualCount[2] = 0x00;
-			nrdData->ArgsLength[3] = nrdData->ActualCount[3] = 0x40;
-			
-			
-			//BlockHeader * blockHeader = new BlockHeader;
+			nrdData->ArgsLength[0] = nrdData->ActualCount[0] = afterNRDDataSize / 16777216;
+			nrdData->ArgsLength[1] = nrdData->ActualCount[1] = afterNRDDataSize / 65536;
+			nrdData->ArgsLength[2] = nrdData->ActualCount[2] = afterNRDDataSize / 256;
+			nrdData->ArgsLength[3] = nrdData->ActualCount[3] = afterNRDDataSize % 256;
 
 			ARBlockRequest * ConnectRequest = new ARBlockRequest();
 						
-			unsigned char* data = (unsigned char*)malloc(RPC_HEADER_LENGTH + NRD_DATA_LENGTH + NRDDataSize);
+			unsigned char* data = (unsigned char*)malloc(RPC_HEADER_LENGTH + NRD_DATA_LENGTH + afterNRDDataSize);
 			
 			
 			unsigned char* header = testHeader->toBuffer(); 
@@ -400,10 +406,10 @@ int main(int argc, char *argv[]) {
 			
 			memcpy(data, header, RPC_HEADER_LENGTH*sizeof(u_char));
 			memcpy(&data[RPC_HEADER_LENGTH], nrd_data, NRD_DATA_LENGTH*sizeof(u_char)); 
-			memcpy(&data[RPC_HEADER_LENGTH + NRD_DATA_LENGTH], connectRequest, (NRDDataSize) * sizeof(u_char));
+			memcpy(&data[RPC_HEADER_LENGTH + NRD_DATA_LENGTH], connectRequest, (afterNRDDataSize) * sizeof(u_char));
 			
 			
-			sendUDPFrame(ip, data, RPC_HEADER_LENGTH + NRD_DATA_LENGTH + NRDDataSize);
+			sendUDPFrame(ip, data, RPC_HEADER_LENGTH + NRD_DATA_LENGTH + afterNRDDataSize);
 
 		} else {
 			std::cout << "decision not valid!" << std::endl;
