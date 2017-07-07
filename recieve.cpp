@@ -151,13 +151,52 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 				case 0x09: std::cout<<"IODReadRequestHeader"<<std::endl; break;
 					//korrekter check wäre nach table 502
 				case 0x20: std::cout<<"I&M0"<<std::endl; break;
-				case 0x30: std::cout<<"I&M0 FilterDataSubModul (wird ausgewertet)"<<std::endl; 
-					unsigned short temp;
+				case 0x30: {std::cout<<"I&M0 FilterDataSubModul (wird ausgewertet)"<<std::endl; 
+					int bufferPointer =0;
 					unsigned short nrOfModules;
-					memcpy (&temp, &buffer [12], sizeof(unsigned short));
-					nrOfModules = ntohs (temp);
-					std::cout<<nrOfModules<<std::endl;
-				break;
+					unsigned short stemp;
+					unsigned long ltemp;
+					
+					memcpy (&stemp, &buffer [12], sizeof(unsigned short));
+					nrOfModules = ntohs (stemp);
+					//iterate over nr of modules, add offset each time
+					std::cout<<"nrOfModules: " <<nrOfModules<<std::endl;
+					for (int i=0; i<nrOfModules; i++){
+						unsigned short slotNr;					
+						unsigned long moduleIdentNr;
+						unsigned short nrOfSubmodules;
+						
+						
+						memcpy (&stemp, &buffer[bufferPointer], sizeof (unsigned short));
+						slotNr=ntohs (stemp);
+						
+						memcpy (&ltemp, &buffer[bufferPointer+2], sizeof (unsigned long));
+						moduleIdentNr=ntohs (ltemp);
+						
+						memcpy (&stemp, &buffer[bufferPointer+6], sizeof (unsigned short));
+						nrOfSubmodules=ntohs (stemp);
+						
+						bufferPointer=bufferPointer+8 ; 	//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
+						
+						std::cout<<"slotNr: " <<slotNr << "moduleIdentNr: " << moduleIdentNr << "nrOfSubmodules: " << nrOfSubmodules <<std::endl;
+						
+							for (int i=0; i<nrOfSubmodules; i++){
+								unsigned short subslotNr;
+								unsigned long subModuleIdentNr;
+								
+								memcpy (&stemp, &buffer[bufferPointer], sizeof (unsigned short));
+								subslotNr = ntohs (stemp);
+								
+								memcpy (&ltemp, &buffer[bufferPointer + 2], sizeof (unsigned long));
+								subModuleIdentNr = ntohs (ltemp);
+								
+								bufferPointer=bufferPointer+6;		//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
+								
+								std::cout<< "subslotNr: "  << subslotNr << "subModuleIdentNr: " << subModuleIdentNr << std::endl;
+							}
+						}
+					break;
+					}
 				case 0x31: std::cout<<"I&M0 FilterDataModul"<<std::endl; break;
 				case 0x32: std::cout<<"I&M0 FilterDataDevice"<<std::endl; break;
 			}	
