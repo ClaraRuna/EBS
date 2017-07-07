@@ -145,19 +145,22 @@ struct device* parseResp(unsigned char* buffer, device*d){
 void parseRPCBlock(unsigned char* buffer, device*d){
 	//std::cout<<"ab hier könnten fehler mit der übergabe des buffers von parseRPCResponse zu parseRPCBlock zusammenhängen" <<std::endl;
 	switch (buffer[0]){
-		case 0x80: std::cout<<"IODReadResponseHeader"<<std::endl; break;
+		case 0x80: std::cout<<"IODReadResponseHeader (wird nicht ausgewertet)"<<std::endl; break;
 		case 0x00:
 			switch(buffer[1]){
 				case 0x09: std::cout<<"IODReadRequestHeader"<<std::endl; break;
 					//korrekter check wäre nach table 502
 				case 0x20: std::cout<<"I&M0"<<std::endl; break;
-					//
-				case 0x30: std::cout<<"I&M0 FilterDataSubModul"<<std::endl; break;
+				case 0x30: std::cout<<"I&M0 FilterDataSubModul (wird ausgewertet)"<<std::endl; 
+					unsigned short temp;
+					unsigned short nrOfModules;
+					memcpy (&temp, &buffer [12], sizeof(unsigned short));
+					nrOfModules = ntohs (temp);
+					std::cout<<nrOfModules<<std::endl;
+				break;
 				case 0x31: std::cout<<"I&M0 FilterDataModul"<<std::endl; break;
 				case 0x32: std::cout<<"I&M0 FilterDataDevice"<<std::endl; break;
 			}	
-		
-		
 	}
 }
 //statt void muss hier dann noch der i&m0 datentyp hin, der noch zu implementieren ist
@@ -235,10 +238,12 @@ void recieveResponse(std::vector <struct device*> *device_list) {
 				//buffer 62-63=dev id, buffer 64-65= vend_id -> checken
 				for (int i=0; i<device_list->size(); i++){
 					device * dev = device_list->at(i);
-					if (dev->device_id[0]==buffer[62] &&
-							dev->device_id[1]==buffer[63] &&
-							dev->vendor_id[0]==buffer[64] &&
-							dev->vendor_id[1]==buffer[65] ) {
+					if (dev->MAC[0]==buffer[6] &&
+							dev->MAC[1]==buffer[7] &&
+							dev->MAC[2]==buffer[8] &&
+							dev->MAC[3]==buffer[9] &&
+							dev->MAC[4]==buffer[10] &&
+							dev->MAC[5]==buffer[11] ) {
 						d = dev;
 					}
 				}
