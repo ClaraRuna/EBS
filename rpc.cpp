@@ -333,8 +333,7 @@ unsigned char *  IODHeader::toBuffer(){
 	return buffer;
 }
 
-ARBlockRequest::ARBlockRequest(BlockHeader * bHeader){
-	blockHeader = bHeader;
+ARBlockRequest::ARBlockRequest(){
 	ARType[0] = 0x00;
 	ARType[1] = 0x06;
 	ArUUID = new uu_id(20);		//20 -> beliebige zahl, die die relation identifiziert
@@ -375,15 +374,17 @@ ARBlockRequest::ARBlockRequest(BlockHeader * bHeader){
 	InitiatorUDPRTPort[1] = 0x92;
 	
 	short NameLength = sizeof(etherName);
-	//std::cout << "EtherNameSize: " << sizeof(etherName) << std::endl;
-	memcpy (&StationNameLength, &NameLength, 2*sizeof(u_char));
+	StationNameLength[0] = NameLength / 256;
+	StationNameLength[1] = NameLength % 256;
 	
+	//BlockHeader
 	blockHeader = new BlockHeader();
 	blockHeader->BlockType[0]=0x01;
 	blockHeader->BlockType[1]=0x01;
 	
 	short size = 54 + NameLength;		//ARBlockRequest -4 + stationNamelength
-	memcpy(&(blockHeader->BlockLength), &size, 2*sizeof(u_char));
+	blockHeader->BlockLength[0] = size / 256; 
+	blockHeader->BlockLength[1] = size % 256;
 
 }
 

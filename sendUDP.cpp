@@ -50,12 +50,6 @@ void sendUDPFrame(unsigned char destIP[], unsigned char data[], int dataSize) {
 	for (int j = 0; j < dataSize; j++) {
 		buffer[j] = data[j];
 	}
-	
-	std::cout<<"packet data"<< std::endl;
-	for (int j = 0; j < dataSize; j++) {
-		std::cout << std::hex << buffer[j]<<" ";
-	}
-	std::cout << std::endl; //new Line
 
 	/*send it*/
 	sendto(sockUDP, buffer, dataSize, 0, (struct sockaddr*)&target_host_address, sizeof(struct sockaddr));

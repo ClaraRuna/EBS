@@ -60,10 +60,13 @@ unsigned char lengthIP[2] = {0x00, 0x0E};
 int main(int argc, char *argv[]) {
 
 	//read if from terminal
-	if (argc > 1)
+	if (argc > 1) {
 		setIfName(argv);
-	else
+		setEtherName(argv);
+	} else {
 		setIfName(NULL);
+		setEtherName(NULL);
+	}
 
 	std::cout << "----------ProfiNET-Tool----------\n" << std::endl;
 
@@ -134,12 +137,7 @@ int main(int argc, char *argv[]) {
 			std::cout << "   Name:	MAC:" << std::endl;
 			for(int tmp = 0; tmp < device_list.size(); tmp++) {
 				struct device dev = *device_list[tmp];
-				std::cout << tmp+1 << ". " << dev.name << ",	" << std::hex << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[0])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[1]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[2]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[3]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[4]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[5]) << std::endl;
+				std::cout << tmp+1 << ". " << dev.name << ",	" << dev.MAC;
 			}
 			std::cout << "" << std::endl; //new Line
 			
@@ -149,6 +147,8 @@ int main(int argc, char *argv[]) {
 				std::cin.ignore();	
 			} while (device < 1 || device > device_list.size());
 			
+			std::cout << "-----> Read from " << device_list[device-1]->name << ":" << std::endl;
+
 			unsigned char mac[6] = {device_list[device-1]->MAC[0], device_list[device-1]->MAC[1], device_list[device-1]->MAC[2], device_list[device-1]->MAC[3], device_list[device-1]->MAC[4], device_list[device-1]->MAC[5]};
 
 			std::cout << "\nchoose option and subotion: (which parameter you want to read?)\n" << std::endl;
@@ -179,12 +179,7 @@ int main(int argc, char *argv[]) {
 			std::cout << "   Name:	MAC:" << std::endl;
 			for(int tmp = 0; tmp < device_list.size(); tmp++) {
 				struct device dev = *device_list[tmp];
-				std::cout << tmp+1 << ". " << dev.name << ",	" << std::hex << std::setw(2) << std::setfill('0') <<static_cast <unsigned> (dev.MAC[0])<<":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[1]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[2]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[3]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[4]) << ":"
-												<< std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.MAC[5]) << std::endl;
+				std::cout << tmp+1 << ". " << dev.name << ",	" << dev.MAC;
 			}
 			std::cout << "" << std::endl; //new Line
 
@@ -193,6 +188,8 @@ int main(int argc, char *argv[]) {
 				std::cin.clear();
 				std::cin.ignore();
 			} while (device < 1 || device > device_list.size());
+
+			std::cout << "-----> Write on " << device_list[device-1]->name << ":" << std::endl;
 
 			unsigned char mac[6] = {device_list[device-1]->MAC[0], device_list[device-1]->MAC[1], device_list[device-1]->MAC[2], device_list[device-1]->MAC[3], device_list[device-1]->MAC[4], device_list[device-1]->MAC[5]};
 
@@ -242,18 +239,7 @@ int main(int argc, char *argv[]) {
 				memcpy(&device_list[device-1]->ipParam, ipData, 12*sizeof(u_char));
 
 				std::cout << "New IP-Data of device: " << device_list[device-1]->name << ":" << std::endl;
-				std::cout << "IP-Adress:	" 	<< std::dec << static_cast <unsigned> (device_list[device-1]->ipParam.ip[0]) <<":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.ip[1]) << ":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.ip[2]) << ":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.ip[3]) << std::endl;
-				std::cout << "subnetMasc:	" 	<< static_cast <unsigned> (device_list[device-1]->ipParam.subnet[0])<<":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.subnet[1]) << ":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.subnet[2]) << ":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.subnet[3]) << std::endl;
-				std::cout << "std.-Gateway:	" 	<< static_cast <unsigned> (device_list[device-1]->ipParam.gateway[0])<<":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.gateway[1]) << ":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.gateway[2]) << ":"
-												<< static_cast <unsigned> (device_list[device-1]->ipParam.gateway[3]) << "\n" << std::endl;
+				std::cout << device_list[device-1]->ipParam << std::endl;
 
 			} else if(option == 2) { //edit Device-Name
 				std::cout << "-----> Edit Device-Name:\n" << std::endl;
@@ -319,6 +305,8 @@ int main(int argc, char *argv[]) {
 				std::cin.clear();
 				std::cin.ignore();
 			} while (device < 1 || device > device_list.size());
+
+			std::cout << "-----> Read from " << device_list[device-1]->name << ":" << std::endl;
 			
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 
@@ -370,6 +358,8 @@ int main(int argc, char *argv[]) {
 				std::cin.ignore();
 			} while (device < 1 || device > device_list.size());
 
+			std::cout << "-----> Write on " << device_list[device-1]->name << ":\n" << std::endl;
+
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 			
 			//hardcodet ObjectUUID
@@ -379,15 +369,29 @@ int main(int argc, char *argv[]) {
 			
 			rpc_Header * testHeader = new rpc_Header(oUUID, iUUID,  aUUID);
 
+			//Operation: Connect (0x0000)
+			testHeader->operationNumber[0] = testHeader->operationNumber[1] = 0x00;
+			
 			//NRDData -> länge ändern 
 			NRDData * nrdData = new NRDData;
 			long NRDDataSize = IOD_CONNECT_REQ_LENGTH+sizeof(*argv); 		//argv is ethernetname
-			memcpy(&nrdData->ArgsLength, &NRDDataSize, 4*sizeof(u_char));
-			memcpy(&nrdData->ActualCount, &NRDDataSize, 4*sizeof(u_char));
+
+			nrdData->ArgsMaxStat[0] = nrdData->MaxCount[0] = 0x00;
+			nrdData->ArgsMaxStat[1] = nrdData->MaxCount[1] = 0x00;
+			nrdData->ArgsMaxStat[2] = nrdData->MaxCount[2] = 0x01;
+			nrdData->ArgsMaxStat[3] = nrdData->MaxCount[3] = 0xd0;
+
+			nrdData->ArgsLength[0] = nrdData->ActualCount[0] = 0x00;
+			nrdData->ArgsLength[1] = nrdData->ActualCount[1] = 0x00;
+			nrdData->ArgsLength[2] = nrdData->ActualCount[2] = 0x00;
+			nrdData->ArgsLength[3] = nrdData->ActualCount[3] = 0x40;
 			
-			ARBlockRequest * ConnectRequest = new ARBlockRequest;
+			
+			//BlockHeader * blockHeader = new BlockHeader;
+
+			ARBlockRequest * ConnectRequest = new ARBlockRequest();
 						
-			unsigned char* data = (unsigned char*)malloc(RPC_HEADER_LENGTH+NRD_DATA_LENGTH+IOD_CONNECT_REQ_LENGTH+sizeof(*argv));
+			unsigned char* data = (unsigned char*)malloc(RPC_HEADER_LENGTH + NRD_DATA_LENGTH + NRDDataSize);
 			
 			
 			unsigned char* header = testHeader->toBuffer(); 
@@ -396,10 +400,10 @@ int main(int argc, char *argv[]) {
 			
 			memcpy(data, header, RPC_HEADER_LENGTH*sizeof(u_char));
 			memcpy(&data[RPC_HEADER_LENGTH], nrd_data, NRD_DATA_LENGTH*sizeof(u_char)); 
-			memcpy(&data[RPC_HEADER_LENGTH + NRD_DATA_LENGTH], connectRequest, (IOD_CONNECT_REQ_LENGTH+sizeof(*argv))*sizeof(u_char));
+			memcpy(&data[RPC_HEADER_LENGTH + NRD_DATA_LENGTH], connectRequest, (NRDDataSize) * sizeof(u_char));
 			
 			
-			sendUDPFrame(ip, data, RPC_HEADER_LENGTH + NRD_DATA_LENGTH + IOD_HEADER_LENGTH);
+			sendUDPFrame(ip, data, RPC_HEADER_LENGTH + NRD_DATA_LENGTH + NRDDataSize);
 
 		} else {
 			std::cout << "decision not valid!" << std::endl;

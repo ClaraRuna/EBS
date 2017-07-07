@@ -178,7 +178,7 @@ typedef struct NRDData{
 					ErrorCode1 × 256 +
 					ErrorCode2*/
 	u_char ArgsLength[4]; 			//länge d daten
-	u_char MaxCount [4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
+	u_char MaxCount[4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
 	u_char Offset[4]; 			//wird 0
 	u_char ActualCount[4]; 			// = ArgsLength
 	
@@ -190,9 +190,9 @@ typedef struct NRDData{
 }NRDData;
 
 //Blockheader
-typedef struct BlockHeader{
-	u_char BlockType [2];
-	u_char BlockLength [2];
+typedef struct BlockHeader {
+	u_char BlockType[2];
+	u_char BlockLength[2];
 	u_char BlockVersionHigh;
 	u_char BlockVersionLow;
 	
@@ -234,7 +234,7 @@ typedef struct ARBlockRequest{
 	u_char StationNameLength[2]; 	//Länge des CMInit-Stationnames (unser eigener)
 	std::string StationName;		//zw 1 und 240 Byte
 	
-	ARBlockRequest(BlockHeader*);
+	ARBlockRequest();
 	unsigned char * toBuffer();
 }ARBlockRequest;
 
