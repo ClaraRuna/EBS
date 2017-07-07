@@ -142,6 +142,45 @@ struct device* parseResp(unsigned char* buffer, device*d){
 	return d;
 }
 
+void parseRPCBlock(unsigned char* buffer, device*d){
+	//std::cout<<"ab hier könnten fehler mit der übergabe des buffers von parseRPCResponse zu parseRPCBlock zusammenhängen" <<std::endl;
+	switch (buffer[0]){
+		case 0x80: std::cout<<"IODReadResponseHeader (wird nicht ausgewertet)"<<std::endl; break;
+		case 0x00:
+			switch(buffer[1]){
+				case 0x09: std::cout<<"IODReadRequestHeader"<<std::endl; break;
+					//korrekter check wäre nach table 502
+				case 0x20: std::cout<<"I&M0"<<std::endl; break;
+				case 0x30: std::cout<<"I&M0 FilterDataSubModul (wird ausgewertet)"<<std::endl; 
+					unsigned short temp;
+					unsigned short nrOfModules;
+					memcpy (&temp, &buffer [12], sizeof(unsigned short));
+					nrOfModules = ntohs (temp);
+					std::cout<<nrOfModules<<std::endl;
+				break;
+				case 0x31: std::cout<<"I&M0 FilterDataModul"<<std::endl; break;
+				case 0x32: std::cout<<"I&M0 FilterDataDevice"<<std::endl; break;
+			}	
+	}
+}
+//statt void muss hier dann noch der i&m0 datentyp hin, der noch zu implementieren ist
+void parseRPCResponse (unsigned char* buffer, device*d){
+	//NRDDataRequest beginnt bei 122
+	int totalLength = 122 + static_cast <unsigned> (buffer[116]) +static_cast <unsigned> ( buffer[117]*256);
+	std::cout << "total length is " << std::dec<< totalLength << std::endl;
+	int temp = 142; 	//bei 142 beginnt der erste Block
+	//int blockLength = buffer[temp +2]*256 + buffer[temp+3];
+	while (temp<=totalLength){
+		std::cout<<"blocktype: " << static_cast <unsigned> (buffer[temp])  << ":" << static_cast <unsigned> (buffer[temp+1]) <<std::endl; 
+		int blockLength = buffer[temp +2]*256 + buffer[temp+3];
+		if (blockLength ==0) break;
+		std::cout<< "block gefunden bei " << temp << ": Länge: " << blockLength <<std::endl;
+		parseRPCBlock(&buffer[temp], d);
+		temp=temp+blockLength+4;  //+4 weil blocktype [2] und blocklength[2] nicht in die länge zählen??
+	}	
+}
+
+
 void recieveResponse(std::vector <struct device*> *device_list) {
 	std::cout<<"start recieving ProfiNET-Frames....\n"<<std::endl;
 	while (1) {
@@ -175,6 +214,48 @@ void recieveResponse(std::vector <struct device*> *device_list) {
 			if (d != NULL) {
 				parseResp(buffer, d);				
 			}
+		}
+		//pnio-paket
+		//port checken: udp-paket mit in-port 0x8894
+		//hier noch mehr checken, falls andere pakete mit den zahlen im buffer rein kommen (unwahrscheinlich)
+		else if (buffer[36]==0x88 && buffer[37]==0x94 && buffer[43]==0x02){
+			std::cout << "response on port 0x8894 from ";
+			for (int i=26; i<30; i++) {
+				std::cout << static_cast <int> (buffer[i]) <<"." ;
+			}
+			std::cout<<"(ip)"<<std::endl;
+			//pakettyp und error codes checken (122-125)
+			if ((buffer[122]!=0x00 || buffer[123]!=0x00 || buffer[124]!=0x00 || buffer[125]!=0x00) ){
+				std::cout<<"rpc-response signals error: \n errorcode 2: " << static_cast <unsigned> (buffer[122]) <<
+										"\n errorcode 1: " << static_cast <unsigned> (buffer [123]) <<
+										"\n errordecode: " <<  static_cast <unsigned> (buffer[124]) <<
+										"\n errorcode: " <<   static_cast <unsigned> (buffer[125]) << std::endl;
+			}
+			//object id checken, um richtiges dev aus liste zu suchen (50-65)
+			else {	
+				//pointer to current device
+				device * d = NULL;		
+				//buffer 62-63=dev id, buffer 64-65= vend_id -> checken
+				for (int i=0; i<device_list->size(); i++){
+					device * dev = device_list->at(i);
+					if (dev->MAC[0]==buffer[6] &&
+							dev->MAC[1]==buffer[7] &&
+							dev->MAC[2]==buffer[8] &&
+							dev->MAC[3]==buffer[9] &&
+							dev->MAC[4]==buffer[10] &&
+							dev->MAC[5]==buffer[11] ) {
+						d = dev;
+					}
+				}
+				if (d == NULL){
+					std::cout << "rpc-response konnte keinem device zugeordnet werden und wird ignoriert" <<std::endl;
+				}
+				else{
+					std::cout << "rpc-response wurde " <<d->name << " zugeordnet" <<std::endl;
+					parseRPCResponse(buffer, d);
+				}
+			}
+			
 		}
 	}
 }
