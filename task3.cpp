@@ -56,6 +56,9 @@ unsigned char status[2] = {0x00, 0x00};
 unsigned char length[2] = {0x00, 0x00};
 unsigned char lengthIP[2] = {0x00, 0x0E};
 
+//RPC
+unsigned char maxBodyLengthRPC[4] = {0x00, 0x00, 0x01, 0xd0};
+
 int etherNameLength = 0;
 
 int main(int argc, char *argv[]) {
@@ -387,23 +390,13 @@ int main(int argc, char *argv[]) {
 			testHeader->lengthOfBody[1] = afterRPCDataSize % 256;
 			
 			//create NRDData-Header
-			NRDData * nrdData = new NRDData;
+			NRDData * nrdData = new NRDData(maxBodyLengthRPC, afterNRDDataSize);
 			
-			nrdData->ArgsMaxStat[0] = nrdData->MaxCount[0] = 0x00;
-			nrdData->ArgsMaxStat[1] = nrdData->MaxCount[1] = 0x00;
-			nrdData->ArgsMaxStat[2] = nrdData->MaxCount[2] = 0x01;
-			nrdData->ArgsMaxStat[3] = nrdData->MaxCount[3] = 0xd0;
-
-			nrdData->ArgsLength[0] = nrdData->ActualCount[0] = afterNRDDataSize / 16777216;
-			nrdData->ArgsLength[1] = nrdData->ActualCount[1] = afterNRDDataSize / 65536;
-			nrdData->ArgsLength[2] = nrdData->ActualCount[2] = afterNRDDataSize / 256;
-			nrdData->ArgsLength[3] = nrdData->ActualCount[3] = afterNRDDataSize % 256;
 
 			ARBlockRequest * ConnectRequest = new ARBlockRequest();
-						
+			
+			//Data to Buffer
 			unsigned char* data = (unsigned char*)malloc(RPC_HEADER_LENGTH + NRD_DATA_LENGTH + afterNRDDataSize);
-			
-			
 			unsigned char* header = testHeader->toBuffer(); 
 			unsigned char* nrd_data = nrdData->toBuffer();
 			unsigned char* connectRequest = ConnectRequest->toBuffer();
@@ -411,7 +404,6 @@ int main(int argc, char *argv[]) {
 			memcpy(data, header, RPC_HEADER_LENGTH*sizeof(u_char));
 			memcpy(&data[RPC_HEADER_LENGTH], nrd_data, NRD_DATA_LENGTH*sizeof(u_char)); 
 			memcpy(&data[RPC_HEADER_LENGTH + NRD_DATA_LENGTH], connectRequest, (afterNRDDataSize) * sizeof(u_char));
-			
 			
 			sendUDPFrame(ip, data, RPC_HEADER_LENGTH + NRD_DATA_LENGTH + afterNRDDataSize);
 

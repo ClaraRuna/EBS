@@ -228,6 +228,17 @@ NRDData::NRDData(){
 	ActualCount[3] = 0x40;
 }
 
+NRDData::NRDData(unsigned char maxLength[4], int bodyLength) {
+	for (int i = 0 ; i < 4 ; i++) {
+		ArgsMaxStat[i] = MaxCount[i] = maxLength[i];
+		Offset[i] = 0x00;
+	}
+	ArgsLength[0] = ActualCount[0] = bodyLength / 16777216;
+	ArgsLength[1] = ActualCount[1] = bodyLength / 65536;
+	ArgsLength[2] = ActualCount[2] = bodyLength / 256;
+	ArgsLength[3] = ActualCount[3] = bodyLength % 256;
+}
+
 unsigned char *  NRDData::toBuffer(){
 	unsigned char* buffer = (unsigned char*)malloc(sizeof(NRDData));
 	for (int i = 0; i < 4; i++){

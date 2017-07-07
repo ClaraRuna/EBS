@@ -16,7 +16,7 @@ typedef struct option {
 	int subopt;
 }OPT;
 
-typedef struct ip_param{
+typedef struct ip_param {
 	//vollkommen idiotisch, dass als int zu speichern, aber mit u_char geht's nicht, obwohl es theoretisch ja genauso gehen müsste wie bei d vendor_id und MAC
 	u_char ip[4];
 	u_char subnet[4];
@@ -127,7 +127,7 @@ typedef struct uu_id{ //16 Byte
 	//default: ActivityUUID, weil frei bestimmbar, hat einfach festen Wert in Feldern
 	uu_id();
 	//ArUUID (bzw alles was mit 1 bel zahl gefüllt werden soll
-	uu_id(u_char );
+	uu_id(u_char);
 	//ObjectUUID
 	uu_id(device * object);
 	//InterfaceUUID
@@ -137,7 +137,7 @@ typedef struct uu_id{ //16 Byte
 	unsigned char * toBuffer();
 }UUID;
 
-typedef struct rpc_Header{
+typedef struct rpc_Header {
 	u_char version;
 	u_char packetType;			//Request, Response, Ping, etc
 	u_char flags1;
@@ -171,8 +171,8 @@ typedef struct rpc_Header{
 }RPCHEADER;
 
 //NRDData-Request/Response
-typedef struct NRDData{
-	u_char ArgsMaxStat [4];			// Request: maximale Länge des Datenpuffers 
+typedef struct NRDData {
+	u_char ArgsMaxStat[4];			// Request: maximale Länge des Datenpuffers 
 			//Response: PNIOStatus:
 				/*This field shall be coded as data type Unsigned32. The byte ordering shall be according to the
 					value of the field RPCDRep (little endian or big endian) within the first field of the
@@ -185,12 +185,14 @@ typedef struct NRDData{
 					ErrorCode1 × 256 +
 					ErrorCode2*/
 	u_char ArgsLength[4]; 			//länge d daten
-	u_char MaxCount [4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
+	u_char MaxCount[4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
 	u_char Offset[4]; 			//wird 0
 	u_char ActualCount[4]; 			// = ArgsLength
 	
 	//konstruktor 
 	NRDData();
+	NRDData(unsigned char maxLength[4], int bodyLength);
+			
 	
 	unsigned char *  toBuffer();		//gibt NRDData in Buffer
 	
