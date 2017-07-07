@@ -313,7 +313,7 @@ int main(int argc, char *argv[]) {
 				std::cin.ignore();
 			} while (device < 1 || device > device_list.size());
 
-			std::cout << "-----> Read from " << device_list[device-1]->name << ":" << std::endl;
+			std::cout << "-----> Read from " << device_list[device-1]->name << ":" << "\n" << std::endl;
 			
 			unsigned char ip[4] = {device_list[device-1]->ipParam.ip[0], device_list[device-1]->ipParam.ip[1], device_list[device-1]->ipParam.ip[2], device_list[device-1]->ipParam.ip[3]};
 

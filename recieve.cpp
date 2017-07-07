@@ -212,14 +212,14 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 void parseRPCResponse (unsigned char* buffer, device*d){
 	//NRDDataRequest beginnt bei 122
 	int totalLength = 122 + static_cast <unsigned> (buffer[116]) +static_cast <unsigned> ( buffer[117]*256);
-	std::cout << "total length is " << std::dec<< totalLength << std::endl;
+	std::cout << "total length:	" << std::dec<< totalLength << std::endl;
 	int temp = 142; 	//bei 142 beginnt der erste Block
 	//int blockLength = buffer[temp +2]*256 + buffer[temp+3];
 	while (temp<=totalLength){
-		std::cout<<"blocktype: " << static_cast <unsigned> (buffer[temp])  << ":" << static_cast <unsigned> (buffer[temp+1]) <<std::endl; 
+		std::cout<<"blocktype:	" << static_cast <unsigned> (buffer[temp])  << ":" << static_cast <unsigned> (buffer[temp+1]) <<std::endl; 
 		int blockLength = buffer[temp +2]*256 + buffer[temp+3];
 		if (blockLength ==0) break;
-		std::cout<< "block gefunden bei " << temp << ": Länge: " << blockLength <<std::endl;
+		std::cout<< "block found on:	" << temp << ", (Length:	" << blockLength << ")" << std::endl;
 		parseRPCBlock(&buffer[temp], d);
 		temp=temp+blockLength+4;  //+4 weil blocktype [2] und blocklength[2] nicht in die länge zählen??
 	}	
@@ -264,11 +264,11 @@ void recieveResponse(std::vector <struct device*> *device_list) {
 		//port checken: udp-paket mit in-port 0x8894
 		//hier noch mehr checken, falls andere pakete mit den zahlen im buffer rein kommen (unwahrscheinlich)
 		else if (buffer[36]==0x88 && buffer[37]==0x94 && buffer[43]==0x02){
-			std::cout << "response on port 0x8894 from ";
-			for (int i=26; i<30; i++) {
-				std::cout << static_cast <int> (buffer[i]) <<"." ;
+			std::cout << "Recieve RPC-Response on port: 0x8894, from: (ip) ";
+			for (int i=26; i<29; i++) {
+				std::cout << static_cast <int> (buffer[i]) << "." ;
 			}
-			std::cout<<"(ip)"<<std::endl;
+			std::cout << static_cast <int> (buffer[30]) << std::endl;
 			//pakettyp und error codes checken (122-125)
 			if ((buffer[122]!=0x00 || buffer[123]!=0x00 || buffer[124]!=0x00 || buffer[125]!=0x00) ){
 				std::cout<<"rpc-response signals error: \n errorcode 2: " << static_cast <unsigned> (buffer[122]) <<
@@ -293,10 +293,10 @@ void recieveResponse(std::vector <struct device*> *device_list) {
 					}
 				}
 				if (d == NULL){
-					std::cout << "rpc-response konnte keinem device zugeordnet werden und wird ignoriert" <<std::endl;
+					std::cout << "--> No Device-Assignment available! --> Ignore this Frame." <<std::endl;
 				}
 				else{
-					std::cout << "rpc-response wurde " <<d->name << " zugeordnet" <<std::endl;
+					std::cout << "--> Assignement to: " << d->name <<std::endl;
 					parseRPCResponse(buffer, d);
 				}
 			}
