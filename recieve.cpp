@@ -181,7 +181,7 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 						std::cout<<"slotNr: " <<slotNr << " moduleIdentNr: " << moduleIdentNr << " nrOfSubmodules: " << nrOfSubmodules <<std::endl;
 						module * m = new module;
 						m -> identNr= moduleIdentNr;
-						d->slots[slotNr] = m;
+						d->slots.insert(std::pair<unsigned short, module*> (slotNr, m));
 						
 						
 							for (int j=0; j<nrOfSubmodules; j++){
@@ -192,9 +192,9 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 								subslotNr = ntohs (temp);
 								
 								memcpy (&ltemp, &buffer[bufferPointer + 2], sizeof (unsigned long));
-								subModuleIdentNr = ntohs (ltemp);
+								subModuleIdentNr = ntohl (ltemp);
 								
-								m->subslots[subslotNr] = subModuleIdentNr;
+								m->subslots.insert(std::pair<unsigned short, unsigned long> (subslotNr, subModuleIdentNr));
 								
 								bufferPointer=bufferPointer+6;		//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
 								

@@ -21,11 +21,12 @@ std::ostream& operator << (std::ostream& os, const dcp_data_header& header){
 
 std::ostream & operator << (std::ostream& os, std::map <unsigned short, module*> slots){
 	for (std::map<unsigned short,module*>::iterator it=slots.begin(); it!=slots.end(); ++it){
-		std::cout<<"slot " << it->first <<"     "  << std::hex << (it-> second->identNr) <<std::endl;
+		os<<"slot " << it->first <<"     ident "  << std::hex << (it-> second->identNr) <<std::endl;
 		for (std::map<unsigned short,unsigned long>::iterator it2=it->second->subslots.begin(); it2!=it->second->subslots.end(); ++it2){
-			std::cout << "      subslot " << it2->first << std::hex << it2->second << std::endl;
+			os<< "      subslot " << it2->first <<"    ident " <<std::hex << it2->second << std::endl;
 		}
 	}
+	return os;
 }
 /*
 //for Ethernet Header
