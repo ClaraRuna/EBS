@@ -338,6 +338,10 @@ int main(int argc, char *argv[]) {
 			
 			sendUDPFrame(ip, data, RPC_HEADER_LENGTH + NRD_DATA_LENGTH + IOD_HEADER_LENGTH);
 
+			usleep(1000000);			
+			
+			std::cout<<device_list[device-1]->slots<<std::endl;
+
 		} else if(decision == 6) {
 			std::cout << "-----> RPC-Write:\n" << std::endl;
 			

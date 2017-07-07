@@ -18,6 +18,15 @@ std::ostream& operator << (std::ostream& os, const dcp_data_header& header){
 		<< " length: " << header.length << std::endl;
 }
 
+
+std::ostream & operator << (std::ostream& os, std::map <unsigned short, module*> slots){
+	for (std::map<unsigned short,module*>::iterator it=slots.begin(); it!=slots.end(); ++it){
+		std::cout<<"slot " << it->first <<"     "  << std::hex << (it-> second->identNr) <<std::endl;
+		for (std::map<unsigned short,unsigned long>::iterator it2=it->second->subslots.begin(); it2!=it->second->subslots.end(); ++it2){
+			std::cout << "      subslot " << it2->first << std::hex << it2->second << std::endl;
+		}
+	}
+}
 /*
 //for Ethernet Header
 std::ostream& operator << (std::ostream& os, unsigned char* buffer){

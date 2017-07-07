@@ -7,7 +7,7 @@
 *.o
 *.so
 *.out
-*test
+
 
 # Packages #
 ############
@@ -38,3 +38,4 @@
 ehthumbs.db
 Thumbs.db
 /test
+test

@@ -152,13 +152,13 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 					//korrekter check wäre nach table 502
 				case 0x20: std::cout<<"I&M0"<<std::endl; break;
 				case 0x30: {std::cout<<"I&M0 FilterDataSubModul (wird ausgewertet)"<<std::endl; 
-					int bufferPointer =0;
 					unsigned short nrOfModules;
-					unsigned short stemp;
+					unsigned short temp;
 					unsigned long ltemp;
 					
-					memcpy (&stemp, &buffer [12], sizeof(unsigned short));
-					nrOfModules = ntohs (stemp);
+					memcpy (&temp, &buffer [12], sizeof(unsigned short));
+					int bufferPointer =14;
+					nrOfModules = ntohs (temp);
 					//iterate over nr of modules, add offset each time
 					std::cout<<"nrOfModules: " <<nrOfModules<<std::endl;
 					for (int i=0; i<nrOfModules; i++){
@@ -167,37 +167,43 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 						unsigned short nrOfSubmodules;
 						
 						
-						memcpy (&stemp, &buffer[bufferPointer], sizeof (unsigned short));
-						slotNr=ntohs (stemp);
+						memcpy (&temp, &buffer[bufferPointer], sizeof (unsigned short));
+						slotNr=ntohs (temp);
 						
 						memcpy (&ltemp, &buffer[bufferPointer+2], sizeof (unsigned long));
-						moduleIdentNr=ntohs (ltemp);
-						
-						memcpy (&stemp, &buffer[bufferPointer+6], sizeof (unsigned short));
-						nrOfSubmodules=ntohs (stemp);
+						moduleIdentNr=ntohl (ltemp);
+												
+						memcpy (&temp, &buffer[bufferPointer+6], sizeof (unsigned short));
+						nrOfSubmodules=ntohs (temp);
 						
 						bufferPointer=bufferPointer+8 ; 	//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
 						
-						std::cout<<"slotNr: " <<slotNr << "moduleIdentNr: " << moduleIdentNr << "nrOfSubmodules: " << nrOfSubmodules <<std::endl;
+						std::cout<<"slotNr: " <<slotNr << " moduleIdentNr: " << moduleIdentNr << " nrOfSubmodules: " << nrOfSubmodules <<std::endl;
+						module * m = new module;
+						m -> identNr= moduleIdentNr;
+						d->slots[slotNr] = m;
 						
-							for (int i=0; i<nrOfSubmodules; i++){
+						
+							for (int j=0; j<nrOfSubmodules; j++){
 								unsigned short subslotNr;
 								unsigned long subModuleIdentNr;
 								
-								memcpy (&stemp, &buffer[bufferPointer], sizeof (unsigned short));
-								subslotNr = ntohs (stemp);
+								memcpy (&temp, &buffer[bufferPointer], sizeof (unsigned short));
+								subslotNr = ntohs (temp);
 								
 								memcpy (&ltemp, &buffer[bufferPointer + 2], sizeof (unsigned long));
 								subModuleIdentNr = ntohs (ltemp);
 								
+								m->subslots[subslotNr] = subModuleIdentNr;
+								
 								bufferPointer=bufferPointer+6;		//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
 								
-								std::cout<< "subslotNr: "  << subslotNr << "subModuleIdentNr: " << subModuleIdentNr << std::endl;
+								std::cout<< "subslotNr: "  << subslotNr << " subModuleIdentNr: " << subModuleIdentNr << std::endl;
 							}
 						}
 					break;
 					}
-				case 0x31: std::cout<<"I&M0 FilterDataModul"<<std::endl; break;
+				case 0x31: std::cout<<"I&M0 FilterDataModul (entspricht bei uns immer genau FilterDataSubModul)"<<std::endl; break;
 				case 0x32: std::cout<<"I&M0 FilterDataDevice"<<std::endl; break;
 			}	
 	}
