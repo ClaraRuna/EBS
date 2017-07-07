@@ -1,17 +1,33 @@
+#include "header.h"
+
 #include <iostream>
 #include <string.h> 
-#include "header.h"
 #include <netinet/in.h>
 #include <net/if.h>
 
+//#include <linux/if_packet.h>
+#include <sys/ioctl.h>
+#include <netinet/ether.h>
+#include <netinet/in.h>
+
 #define RPC_HEADER_LENGTH 80
 #define NRDDATA_LENGTH 20
+#define DEFAULT_IF	"enx9cebe808bd01"
 
 
 //initialize static variable with 0;
-long rpc_Header::headerCount=0; 
-short IODHeader::SeqNumberCount=0;
-short ARBlockRequest::sessionKeyCounter=0;
+long rpc_Header::headerCount = 0; 
+short IODHeader::SeqNumberCount = 0;
+short ARBlockRequest::sessionKeyCounter = 0;
+
+char etherName[IFNAMSIZ]; //Name of Ethernetport
+
+void setEtherName(char *argv[]) {
+	if(argv != NULL)
+		strcpy(etherName, argv[1]);
+	else
+		strcpy(etherName, DEFAULT_IF);
+}
 
 //default: activity, beliebig, dient nur identifikation
 uu_id::uu_id():
@@ -317,7 +333,8 @@ unsigned char *  IODHeader::toBuffer(){
 	return buffer;
 }
 
-ARBlockRequest::ARBlockRequest(){
+ARBlockRequest::ARBlockRequest(BlockHeader * bHeader){
+	blockHeader = bHeader;
 	ARType[0] = 0x00;
 	ARType[1] = 0x06;
 	ArUUID = new uu_id(20);		//20 -> beliebige zahl, die die relation identifiziert
@@ -326,7 +343,10 @@ ARBlockRequest::ARBlockRequest(){
 	
 	struct ifreq if_mac;
 	memset(&if_mac, 0, sizeof(struct ifreq));
-	strncpy(if_mac.ifr_name, "enp4s0", sizeof ("enp4s0"));
+	strncpy(if_mac.ifr_name, etherName, IFNAMSIZ-1);
+	if (ioctl(4, SIOCGIFHWADDR, &if_mac) < 0)
+	    perror("SIOCGIFHWADDR");
+
 	
 	CMInitiatorMAC[0] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[0];
 	CMInitiatorMAC[1] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[1];
@@ -354,16 +374,15 @@ ARBlockRequest::ARBlockRequest(){
 	InitiatorUDPRTPort[0] = 0x88;
 	InitiatorUDPRTPort[1] = 0x92;
 	
-	StationName = "enp4s0";
-	
-	short NameLength = StationName.size();
+	short NameLength = sizeof(etherName);
+	//std::cout << "EtherNameSize: " << sizeof(etherName) << std::endl;
 	memcpy (&StationNameLength, &NameLength, 2*sizeof(u_char));
 	
 	blockHeader = new BlockHeader();
 	blockHeader->BlockType[0]=0x01;
 	blockHeader->BlockType[1]=0x01;
 	
-	short size = 54 + StationName.size();		//ARBlockRequest -4 + stationNamelength
+	short size = 54 + NameLength;		//ARBlockRequest -4 + stationNamelength
 	memcpy(&(blockHeader->BlockLength), &size, 2*sizeof(u_char));
 
 }
@@ -373,6 +392,8 @@ unsigned char *  ARBlockRequest::toBuffer(){
 	
 	unsigned char* bHeader = blockHeader->toBuffer();
 	
+	memcpy(&buffer[0], bHeader, 6*sizeof(u_char));
+
 	buffer[6] = ARType[0];
 	buffer[7] = ARType[1];
 	

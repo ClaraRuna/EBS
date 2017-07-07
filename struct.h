@@ -17,16 +17,16 @@ typedef struct option {
 
 typedef struct ip_param{
 	//vollkommen idiotisch, dass als int zu speichern, aber mit u_char geht's nicht, obwohl es theoretisch ja genauso gehen müsste wie bei d vendor_id und MAC
-	u_char ip [4];
+	u_char ip[4];
 	u_char subnet[4];
 	u_char gateway[4];
 	
 	ip_param(){
-	for (int i = 0 ; i<4 ; i++){
-		ip[i]=0;
-		subnet[i]=0;
-		gateway[i]=0;
-	}
+		for (int i = 0 ; i < 4 ; i++){
+			ip[i] = 0;
+			subnet[i] = 0;
+			gateway[i] = 0;
+		}
 	}
 }IPPAR;
 
@@ -34,22 +34,22 @@ typedef struct device {
 	u_char MAC[6];
 	std::string name;
 	std::string vendor;
-	u_char vendor_id [2];
-	u_char device_id [2];
+	u_char vendor_id[2];
+	u_char device_id[2];
 	device_role devRole;
 	std::vector<option*> options;
 	ip_param ipParam;
 	
 	//konstruktor
-	device(){
-	for (int i = 0; i<6; ++i){
-		MAC[i]=0;
-	}
-	for (int i = 0; i<2; ++i){
-		vendor_id[i]='\0';
-		device_id[i]='\0';
-	}
-	devRole=static_cast<device_role>(0xF0);
+		device(){
+		for (int i = 0; i < 6; ++i) {
+			MAC[i] = 0;
+		}
+		for (int i = 0; i < 2; ++i) {
+			vendor_id[i] = '\0';
+			device_id[i] = '\0';
+		}
+		devRole = static_cast <device_role> (0xF0);
 	}
 }DEV;
 
@@ -234,7 +234,7 @@ typedef struct ARBlockRequest{
 	u_char StationNameLength[2]; 	//Länge des CMInit-Stationnames (unser eigener)
 	std::string StationName;		//zw 1 und 240 Byte
 	
-	ARBlockRequest();
+	ARBlockRequest(BlockHeader*);
 	unsigned char * toBuffer();
 }ARBlockRequest;
 

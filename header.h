@@ -14,4 +14,7 @@
 	//for sending UDP-Frames (RPC)
 	void createUDPsocket();
 	void sendUDPFrame(unsigned char destIP[], unsigned char data[], int dataSize);
+
+	//vor buliding rpc-Frames
+	void setEtherName(char *argv[]);
 #endif
