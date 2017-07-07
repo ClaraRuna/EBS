@@ -1,5 +1,6 @@
 #include <vector>
 #include <iomanip>
+#include <map>
 
 enum device_role{
 	ioDevice = 0x01,
@@ -30,6 +31,11 @@ typedef struct ip_param{
 	}
 }IPPAR;
 
+typedef struct module {
+	unsigned long identNr;
+	std::map <unsigned short, unsigned long> subslots; //subslot is key, submodule is value
+}MODULE;
+
 typedef struct device {
 	u_char MAC[6];
 	std::string name;
@@ -39,6 +45,7 @@ typedef struct device {
 	device_role devRole;
 	std::vector<option*> options;
 	ip_param ipParam;
+	std::map <unsigned short, module*> slots ; //slot is key, module is value
 	
 	//konstruktor
 		device(){
@@ -178,7 +185,7 @@ typedef struct NRDData{
 					ErrorCode1 × 256 +
 					ErrorCode2*/
 	u_char ArgsLength[4]; 			//länge d daten
-	u_char MaxCount[4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
+	u_char MaxCount [4]; 			//selber Wert wie ArgsMaximum, bei einer Response gleich der des Requests
 	u_char Offset[4]; 			//wird 0
 	u_char ActualCount[4]; 			// = ArgsLength
 	
@@ -190,9 +197,9 @@ typedef struct NRDData{
 }NRDData;
 
 //Blockheader
-typedef struct BlockHeader {
-	u_char BlockType[2];
-	u_char BlockLength[2];
+typedef struct BlockHeader{
+	u_char BlockType [2];
+	u_char BlockLength [2];
 	u_char BlockVersionHigh;
 	u_char BlockVersionLow;
 	
