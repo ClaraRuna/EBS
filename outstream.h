@@ -133,21 +133,21 @@ std::ostream& operator << (std::ostream& os, const unsigned char mac[6]) {
 //for IP-Param (IP, Subnet, Gateway)
 std::ostream& operator << (std::ostream& os, const ip_param& ipParam) {
 	os  << std::dec
-		<< "IP-Address:	" << static_cast <unsigned> (ipParam.ip[0]) 	 << "." << static_cast <unsigned> (ipParam.ip[1]) 		<< "." << static_cast <unsigned> (ipParam.ip[2]) 	  << "." <<  static_cast <unsigned> (ipParam.ip[3]) << std:: endl
-		<< "Subnet:		" << static_cast <unsigned> (ipParam.subnet[0])  << "." << static_cast <unsigned> (ipParam.subnet[1]) 	<< "." << static_cast <unsigned> (ipParam.subnet[2])  << "." <<  static_cast <unsigned> (ipParam.subnet[3])  << std:: endl
-		<< "Gateway:	" << static_cast <unsigned> (ipParam.gateway[0]) << "." << static_cast <unsigned> (ipParam.gateway[1]) 	<< "." << static_cast <unsigned> (ipParam.gateway[2]) << "." <<  static_cast <unsigned> (ipParam.gateway[3]) << std:: endl;
+		<< "IP-Address:		" << static_cast <unsigned> (ipParam.ip[0]) 	 << "." << static_cast <unsigned> (ipParam.ip[1]) 		<< "." << static_cast <unsigned> (ipParam.ip[2]) 	  << "." <<  static_cast <unsigned> (ipParam.ip[3]) << std:: endl
+		<< "Subnet:			" << static_cast <unsigned> (ipParam.subnet[0])  << "." << static_cast <unsigned> (ipParam.subnet[1]) 	<< "." << static_cast <unsigned> (ipParam.subnet[2])  << "." <<  static_cast <unsigned> (ipParam.subnet[3])  << std:: endl
+		<< "Gateway:		" << static_cast <unsigned> (ipParam.gateway[0]) << "." << static_cast <unsigned> (ipParam.gateway[1]) 	<< "." << static_cast <unsigned> (ipParam.gateway[2]) << "." <<  static_cast <unsigned> (ipParam.gateway[3]) << std:: endl;
 	return os;
 }
 
 //for devices
 std::ostream& operator << (std::ostream& os, const device& dev){
-	os  << "MAC-Address:	" << dev.MAC
-		<< "Stationsname:	" << dev.name << std::endl
-		<< "Vendor:		" << dev.vendor << std::endl
-		<< "Vendor-ID:	" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.vendor_id[0]) << ":" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.vendor_id[1]) << std::endl
-		<< "Device-ID:	" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.device_id[0]) << ":" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.device_id[1]) << std::endl
-		<< "Device-Role:	" << dev.devRole << std::endl
-		<< "Supported Options: " << dev.options;
+	os  << "MAC-Address:		" << dev.MAC
+		<< "Stationsname:		" << dev.name << std::endl
+		<< "Vendor:			" << dev.vendor << std::endl
+		<< "Vendor-ID:		" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.vendor_id[0]) << ":" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.vendor_id[1]) << std::endl
+		<< "Device-ID:		" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.device_id[0]) << ":" << std::setw(2) << std::setfill('0') << static_cast <unsigned> (dev.device_id[1]) << std::endl
+		<< "Device-Role:		" << dev.devRole << std::endl
+		<< "Supported Options:	" << dev.options;
 	if (!(dev.ipParam.ip[0] == 0 && dev.ipParam.ip[1] == 0 && dev.ipParam.ip[2] == 0 && dev.ipParam.ip[3] == 0)) {
 		os  << dev.ipParam << std::endl;
 	}

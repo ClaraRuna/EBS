@@ -134,8 +134,9 @@ int main(int argc, char *argv[]) {
 			sendDCPFrame(multicast_mac, etherType_profiNET, frameID_identRequest, dcpHeader_identReq, dcpDataHeader_identReq, 0x00);
 			usleep(1000000);
 			for(int i = 0; i < device_list.size(); i++) {
-				std::cout << *device_list[i] <<std::endl;
+				std::cout << *device_list[i];
 			}
+			std::cout << std::endl;
 		} else if(decision == 3) {
 			std::cout << "-----> Get-Request:\n" << std::endl;
 			int device, param;
