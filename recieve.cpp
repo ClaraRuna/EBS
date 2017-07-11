@@ -145,13 +145,13 @@ struct device* parseResp(unsigned char* buffer, device*d){
 void parseRPCBlock(unsigned char* buffer, device*d){
 	//std::cout<<"ab hier könnten fehler mit der übergabe des buffers von parseRPCResponse zu parseRPCBlock zusammenhängen" <<std::endl;
 	switch (buffer[0]){
-		case 0x80: std::cout<<"IODReadResponseHeader (wird nicht ausgewertet)"<<std::endl; break;
+		case 0x80: std::cout<<"IODReadResponseHeader	(not evaluated)"<<std::endl; break;
 		case 0x00:
 			switch(buffer[1]){
 				case 0x09: std::cout<<"IODReadRequestHeader"<<std::endl; break;
 					//korrekter check wäre nach table 502
 				case 0x20: std::cout<<"I&M0"<<std::endl; break;
-				case 0x30: {std::cout<<"I&M0 FilterDataSubModul (wird ausgewertet)"<<std::endl; 
+				case 0x30: {std::cout<<"I&M0 FilterDataSubModul	(evaluated)"<<std::endl; 
 					unsigned short nrOfModules;
 					unsigned short temp;
 					unsigned long ltemp;
@@ -160,7 +160,7 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 					int bufferPointer =14;
 					nrOfModules = ntohs (temp);
 					//iterate over nr of modules, add offset each time
-					std::cout<<"nrOfModules: " <<nrOfModules<<std::endl;
+
 					for (int i=0; i<nrOfModules; i++){
 						unsigned short slotNr;					
 						unsigned long moduleIdentNr;
@@ -178,7 +178,6 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 						
 						bufferPointer=bufferPointer+8 ; 	//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
 						
-						std::cout<<"slotNr: " <<slotNr << " moduleIdentNr: " << moduleIdentNr << " nrOfSubmodules: " << nrOfSubmodules <<std::endl;
 						module * m = new module;
 						m -> identNr= moduleIdentNr;
 						d->slots.insert(std::pair<unsigned short, module*> (slotNr, m));
@@ -197,13 +196,11 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 								m->subslots.insert(std::pair<unsigned short, unsigned long> (subslotNr, subModuleIdentNr));
 								
 								bufferPointer=bufferPointer+6;		//bufferPointer um Länge des soeben ausgelesenen parts erhöhen
-								
-								std::cout<< "subslotNr: "  << subslotNr << " subModuleIdentNr: " << subModuleIdentNr << std::endl;
 							}
 						}
 					break;
 					}
-				case 0x31: std::cout<<"I&M0 FilterDataModul (entspricht bei uns immer genau FilterDataSubModul)"<<std::endl; break;
+				case 0x31: std::cout<<"I&M0 FilterDataModul"<<std::endl; break;
 				case 0x32: std::cout<<"I&M0 FilterDataDevice"<<std::endl; break;
 			}	
 	}
@@ -212,14 +209,14 @@ void parseRPCBlock(unsigned char* buffer, device*d){
 void parseRPCResponse (unsigned char* buffer, device*d){
 	//NRDDataRequest beginnt bei 122
 	int totalLength = 122 + static_cast <unsigned> (buffer[116]) +static_cast <unsigned> ( buffer[117]*256);
-	std::cout << "total length:	" << std::dec<< totalLength << std::endl;
+	std::cout << "total length:		" << std::dec<< totalLength << std::endl;
 	int temp = 142; 	//bei 142 beginnt der erste Block
 	//int blockLength = buffer[temp +2]*256 + buffer[temp+3];
 	while (temp<=totalLength){
-		std::cout<<"blocktype:	" << static_cast <unsigned> (buffer[temp])  << ":" << static_cast <unsigned> (buffer[temp+1]) <<std::endl; 
+		std::cout<<"--> blocktype:	" << static_cast <unsigned> (buffer[temp])  << ":" << static_cast <unsigned> (buffer[temp+1]) <<std::endl; 
 		int blockLength = buffer[temp +2]*256 + buffer[temp+3];
 		if (blockLength ==0) break;
-		std::cout<< "block found on:	" << temp << ", (Length:	" << blockLength << ")" << std::endl;
+		std::cout<< "* block found on:	" << temp << ", (Length: " << blockLength << ")" << std::endl;
 		parseRPCBlock(&buffer[temp], d);
 		temp=temp+blockLength+4;  //+4 weil blocktype [2] und blocklength[2] nicht in die länge zählen??
 	}	
@@ -264,11 +261,11 @@ void recieveResponse(std::vector <struct device*> *device_list) {
 		//port checken: udp-paket mit in-port 0x8894
 		//hier noch mehr checken, falls andere pakete mit den zahlen im buffer rein kommen (unwahrscheinlich)
 		else if (buffer[36]==0x88 && buffer[37]==0x94 && buffer[43]==0x02){
-			std::cout << "Recieve RPC-Response on port: 0x8894, from: (ip) ";
+			std::cout << "Recieve RPC-Response 	(port: 0x8894, ip: ";
 			for (int i=26; i<29; i++) {
 				std::cout << static_cast <int> (buffer[i]) << "." ;
 			}
-			std::cout << static_cast <int> (buffer[30]) << std::endl;
+			std::cout << static_cast <int> (buffer[30]) << ")" << std::endl;
 			//pakettyp und error codes checken (122-125)
 			if ((buffer[122]!=0x00 || buffer[123]!=0x00 || buffer[124]!=0x00 || buffer[125]!=0x00) ){
 				std::cout<<"rpc-response signals error: \n errorcode 2: " << static_cast <unsigned> (buffer[122]) <<
@@ -296,7 +293,7 @@ void recieveResponse(std::vector <struct device*> *device_list) {
 					std::cout << "--> No Device-Assignment available! --> Ignore this Frame." <<std::endl;
 				}
 				else{
-					std::cout << "--> Assignement to: " << d->name <<std::endl;
+					std::cout << "--> Assignement to:	" << d->name <<std::endl;
 					parseRPCResponse(buffer, d);
 				}
 			}

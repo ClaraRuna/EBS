@@ -344,6 +344,7 @@ int main(int argc, char *argv[]) {
 
 			usleep(1000000);			
 			
+			std::cout << "\nDevice " << device_list[device-1]->name << " updated:" << std::endl;
 			std::cout<<device_list[device-1]->slots<<std::endl;
 
 		} else if(decision == 6) {
