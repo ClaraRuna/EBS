@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 		} else if(decision == 3) {
 			std::cout << "-----> Get-Request:\n" << std::endl;
 			int device, param;
-			std::cout << "choose a device: (from which device you want to read?)\n" << std::endl;
+			std::cout << "choose a device: (from which device do you want to read?)\n" << std::endl;
 			std::cout << "   Name:	MAC:" << std::endl;
 			for(int tmp = 0; tmp < device_list.size(); tmp++) {
 				struct device dev = *device_list[tmp];
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 
 			unsigned char mac[6] = {device_list[device-1]->MAC[0], device_list[device-1]->MAC[1], device_list[device-1]->MAC[2], device_list[device-1]->MAC[3], device_list[device-1]->MAC[4], device_list[device-1]->MAC[5]};
 
-			std::cout << "\nchoose option and subotion: (which parameter you want to read?)\n" << std::endl;
+			std::cout << "\nchoose option and subotion: (which parameter do you want to read?)\n" << std::endl;
 			
 			std::cout << device_list[device-1]->options << std::endl;
 			
